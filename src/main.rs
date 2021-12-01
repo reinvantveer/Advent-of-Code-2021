@@ -1,0 +1,24 @@
+mod day_1;
+
+use clap::{App, Arg};
+
+pub fn main() {
+    let matches = App::new("Advent of Code 2021")
+        .version("0.1.0")
+        .author("Rein van 't Veer <rein@vantveer.me>")
+        .about("My solutions to the Advent of Code 2021 - see https://adventofcode.com/2021")
+        .arg(Arg::with_name("day")
+            .long("day")
+            .short("d")
+            .required(true)
+            .takes_value(true)
+            .help("Which day of the advent to run"))
+        .get_matches();
+
+
+    let day = matches.value_of("day").unwrap();
+    println!("Running solutions for day {}", &day);
+    match day {
+        _ => { day_1::run() }
+    };
+}
