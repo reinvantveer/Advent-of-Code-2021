@@ -1,4 +1,5 @@
 mod day_1;
+mod day_2;
 
 use clap::{App, Arg};
 
@@ -19,6 +20,8 @@ pub fn main() {
     let day = matches.value_of("day").unwrap();
     println!("Running solutions for day {}", &day);
     match day {
-        _ => { day_1::run() }
+        "1" => { day_1::run() },
+        "2" => { day_2::run() },
+        _ => { todo!("This day isn't implemented (yet)") },
     };
 }
