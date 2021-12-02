@@ -1,7 +1,7 @@
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run () {
-    let inputs = read_lines("data/part_1_input.txt");
+    let inputs = read_lines("data/day_1_input.txt");
 
     let measurements: Vec<i32> = inputs
         .iter()
@@ -39,7 +39,7 @@ pub(crate) fn window_increases(measurements: Vec<i32>, window_size: usize) -> us
 #[cfg(test)]
 #[test]
 fn test_sliding_triplet_window() {
-    let measurements: Vec<_> = read_lines("data/sample.txt")
+    let measurements: Vec<_> = read_lines("data/day_1_sample.txt")
         .iter()
         .map(|m| m.parse::<i32>().unwrap())
         .collect();
