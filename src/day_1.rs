@@ -8,12 +8,11 @@ pub(crate) fn run () {
         .map(|m| m.parse::<i32>().unwrap())
         .collect();
 
-    let mut increases = 0;
-    for (idx, measurement) in measurements.iter().enumerate() {
-        if idx == 0 { continue; };
-        if measurement > &measurements[idx - 1] { increases += 1}
-    }
-    println!("There are {} increases in depth", increases);
+    let mut increases = window_increases(measurements.clone(), 1);
+    println!("There are {} increases in depth for part 1", increases);
+
+    increases = window_increases(measurements, 3);
+    println!("There are {} increases in depth for part 2", increases)
 }
 
 pub(crate) fn window_increases(measurements: Vec<i32>, window_size: usize) -> usize {
