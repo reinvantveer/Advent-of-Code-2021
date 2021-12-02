@@ -1,7 +1,11 @@
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
-
+    let descriptions = read_lines("data/day_2_input.txt");
+    let movements = parse_movements(&descriptions);
+    let (horizontal, depth) = calculate_position(movements);
+    println!("Horizontal position is at {}, depth at {}", horizontal, depth);
+    println!("These two multiplied is {}", horizontal * depth);
 }
 
 pub(crate) struct Movement {
