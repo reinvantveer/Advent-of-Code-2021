@@ -1,13 +1,7 @@
-use std::fs::File;
-use std::io;
-use std::io::BufRead;
+use advent_of_code_2021::read_lines;
 
 pub(crate) fn run () {
-    let input = File::open("data/part_1_input.txt").unwrap();
-    let reader = io::BufReader::new(input);
-    let inputs: Vec<String> = reader.lines()
-        .filter_map(io::Result::ok)
-        .collect();
+    let inputs = read_lines("data/part_1_input.txt");
 
     let measurements: Vec<i32> = inputs
         .iter()
@@ -21,3 +15,4 @@ pub(crate) fn run () {
     }
     println!("There are {} increases in depth", increases);
 }
+
