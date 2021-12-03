@@ -39,6 +39,33 @@ pub(crate) fn count_bits(inputs: &Vec<String>) -> Vec<usize> {
     bit_counts
 }
 
+pub(crate) fn o2_co2_ratings(inputs: &Vec<String>) -> (usize, usize) {
+    let half_of_inputs = inputs.len() / 2;
+
+    let mut bit_counts = count_bits(inputs);
+
+    let most_common_bits: Vec<usize> = get_most_common_bits(&half_of_inputs, &bit_counts);
+
+    let mut filtered;
+    for (idx, bit) in most_common_bits.iter().enumerate() {
+        filtered = inputs.iter()
+            .filter(|input| input[idx] == bit.to_string())
+    }
+    (12, 12)
+}
+
+fn get_most_common_bits(half_of_inputs: &usize, bit_counts: &Vec<usize>) -> Vec<usize> {
+    bit_counts.iter()
+        .map(|count| {
+            if count >= &half_of_inputs {
+                1 as usize
+            } else {
+                0 as usize
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 #[test]
 fn test_bit_counting() {
@@ -69,4 +96,12 @@ fn test_gamma_calculation() {
     let (gamma, epsilon) = calculate_gamma_epsilon(&inputs);
     assert_eq!(gamma, 22);
     assert_eq!(epsilon, 9);
+}
+
+#[test]
+fn test_filter_function() {
+    let inputs = read_lines("data/day_3_sample.txt");
+    let (o2, co2) = o2_co2_ratings(&inputs);
+    assert_eq!(o2, 23);
+    assert_eq!(co2, 10);
 }
