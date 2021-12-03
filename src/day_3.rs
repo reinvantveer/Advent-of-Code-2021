@@ -43,12 +43,11 @@ pub(crate) fn o2_co2_ratings(inputs: &Vec<String>) -> (usize, usize) {
     let mut bit_counts = bits_column_sum(inputs);
     let most_common_bits: Vec<usize> = get_most_common_bits(inputs.len(), &bit_counts);
 
-    let o2_input = filter_matching_inputs(inputs, most_common_bits);
+    let o2_input = get_o2_input(inputs, most_common_bits);
     (12, 12)
 }
 
-fn filter_matching_inputs(inputs: &Vec<String>, most_common_bits: Vec<usize>) -> &str {
-    let mut filtered_indices= Vec::new();
+fn get_o2_input(inputs: &Vec<String>, most_common_bits: Vec<usize>) -> &str {
     let mut to_return = "";
 
     for (b_idx, bit) in most_common_bits.iter().enumerate() {
@@ -116,7 +115,9 @@ fn test_filter_function() {
     let inputs = read_lines("data/day_3_sample.txt");
     let bit_counts = bits_column_sum(&inputs);
     let most_common_bits = get_most_common_bits(inputs.len(), &bit_counts);
-    let filtered = filter_matching_inputs(&inputs, most_common_bits);
+    assert_eq!(most_common_bits, vec![1, 0, 1, 1, 1]);
+
+    let filtered = get_o2_input(&inputs, most_common_bits);
     assert_eq!(filtered, "10111");
 
     let (o2, co2) = o2_co2_ratings(&inputs);
