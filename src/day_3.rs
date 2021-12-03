@@ -40,21 +40,34 @@ pub(crate) fn bits_column_sum(inputs: &Vec<String>) -> Vec<usize> {
 }
 
 pub(crate) fn o2_co2_ratings(inputs: &Vec<String>) -> (usize, usize) {
-    let half_of_inputs = inputs.len() / 2;
-
     let mut bit_counts = bits_column_sum(inputs);
+    let most_common_bits: Vec<usize> = get_most_common_bits(inputs.len(), &bit_counts);
 
-    let most_common_bits: Vec<usize> = get_most_common_bits(&half_of_inputs, &bit_counts);
-
-    let mut filtered;
-    for (idx, bit) in most_common_bits.iter().enumerate() {
-        filtered = inputs.iter()
-            .filter(|input| input[idx] == bit.to_string())
-    }
+    let o2_input = filter_matching_inputs(inputs, most_common_bits);
     (12, 12)
 }
 
-fn get_most_common_bits(half_of_inputs: &usize, bit_counts: &Vec<usize>) -> Vec<usize> {
+fn filter_matching_inputs(inputs: &Vec<String>, most_common_bits: Vec<usize>) -> &str {
+    let mut filtered_indices= Vec::new();
+    let mut to_return = "";
+
+    for (b_idx, bit) in most_common_bits.iter().enumerate() {
+        for (f_idx, input) in inputs.iter().enumerate() {
+            let chars: Vec<_> = input.chars().collect();
+            if chars[b_idx].to_string() != bit.to_string() && filtered_indices.len() < inputs.len() {
+                filtered_indices.push(f_idx);
+            } else {
+                to_return = inputs.get(f_idx).unwrap().as_str().clone()
+            }
+        }
+    }
+
+    &to_return
+}
+
+fn get_most_common_bits(inputs_len: usize, bit_counts: &Vec<usize>) -> Vec<usize> {
+    let half_of_inputs = inputs_len / 2;
+
     bit_counts.iter()
         .map(|count| {
             if count >= &half_of_inputs {
@@ -101,6 +114,11 @@ fn test_gamma_calculation() {
 #[test]
 fn test_filter_function() {
     let inputs = read_lines("data/day_3_sample.txt");
+    let bit_counts = bits_column_sum(&inputs);
+    let most_common_bits = get_most_common_bits(inputs.len(), &bit_counts);
+    let filtered = filter_matching_inputs(&inputs, most_common_bits);
+    assert_eq!(filtered, "10111");
+
     let (o2, co2) = o2_co2_ratings(&inputs);
     assert_eq!(o2, 23);
     assert_eq!(co2, 10);
