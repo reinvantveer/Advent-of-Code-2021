@@ -29,7 +29,7 @@ pub(crate) fn calculate_gamma_epsilon(inputs: &Vec<String>) -> (usize, usize) {
 }
 
 pub(crate) fn count_bits(inputs: &Vec<String>) -> Vec<usize> {
-    let mut bit_counts: Vec::<usize> = vec![0, 0, 0, 0, 0];
+    let mut bit_counts: Vec::<usize> = vec![0; inputs[0].len()];
 
     for input in inputs {
         for (idx, char) in input.chars().enumerate() {
