@@ -10,7 +10,7 @@ pub(crate) fn run() {
 pub(crate) fn calculate_gamma_epsilon(inputs: &Vec<String>) -> (usize, usize) {
     let mut gamma = 0;
     let mut epsilon= 0;
-    let mut bit_counts = count_bits(inputs);
+    let mut bit_counts = bits_column_sum(inputs);
 
     // Reverse to start with least significant bit first - it is on the rightmost element
     bit_counts.reverse();
@@ -28,7 +28,7 @@ pub(crate) fn calculate_gamma_epsilon(inputs: &Vec<String>) -> (usize, usize) {
     (gamma as usize, epsilon as usize)
 }
 
-pub(crate) fn count_bits(inputs: &Vec<String>) -> Vec<usize> {
+pub(crate) fn bits_column_sum(inputs: &Vec<String>) -> Vec<usize> {
     let mut bit_counts: Vec::<usize> = vec![0; inputs[0].len()];
 
     for input in inputs {
@@ -42,7 +42,7 @@ pub(crate) fn count_bits(inputs: &Vec<String>) -> Vec<usize> {
 pub(crate) fn o2_co2_ratings(inputs: &Vec<String>) -> (usize, usize) {
     let half_of_inputs = inputs.len() / 2;
 
-    let mut bit_counts = count_bits(inputs);
+    let mut bit_counts = bits_column_sum(inputs);
 
     let most_common_bits: Vec<usize> = get_most_common_bits(&half_of_inputs, &bit_counts);
 
@@ -70,7 +70,7 @@ fn get_most_common_bits(half_of_inputs: &usize, bit_counts: &Vec<usize>) -> Vec<
 #[test]
 fn test_bit_counting() {
     let inputs = read_lines("data/day_3_sample.txt");
-    let counts = count_bits(&inputs);
+    let counts = bits_column_sum(&inputs);
     assert_eq!(counts, vec![7, 5, 8, 7, 5]);
 
     let mut gamma_bits = vec![0, 0, 0, 0, 0];
