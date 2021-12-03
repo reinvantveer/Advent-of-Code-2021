@@ -1,7 +1,10 @@
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
-
+    let inputs = read_lines("data/day_3_input.txt");
+    let (gamma, epsilon) = calculate_gamma_epsilon(&inputs);
+    println!("Gamma is {}, epsilon is {}", gamma, epsilon);
+    println!("These multiplied by each other is {}", gamma * epsilon);
 }
 
 pub(crate) fn calculate_gamma_epsilon(inputs: &Vec<String>) -> (usize, usize) {
