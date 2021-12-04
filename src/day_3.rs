@@ -57,6 +57,7 @@ fn filter_o2_input(inputs: &Vec<String>) -> String {
             map_keys.push(key.to_string().clone())
         }
 
+        // Update the most common bit value at position
         let most_common_at_pos = most_common_bit_for_pos(&map_keys, pos);
         println!("Updated most common bit {} for {} remaining entries at position {}",
             &most_common_at_pos, &map_keys.len(), &pos
@@ -97,10 +98,34 @@ fn filter_to_last_at_pos(
     }
 }
 
-// pub(crate) fn filter_co2_input(inputs: &Vec<String>) -> String {
-//
-// }
-//
+pub(crate) fn filter_co2_input(inputs: &Vec<String>) -> String {
+    let mut input_map = hashmap_from_inputs(inputs);
+    let mut correct_input_to_return = "".to_string();
+    let input_0_len = inputs.get(0).unwrap().len();
+
+    // advance one position in the input length a time to filter values
+    for pos in 0..input_0_len {
+        println!("Iterating over {} of {} input positions", &pos, &input_0_len);
+        // the most common bit has to be recalculated for each jump to the next bit
+        // and re-applied on the remaining members of the hashmap
+        let mut map_keys = Vec::new();
+
+        for key in input_map.keys() {
+            map_keys.push(key.to_string().clone())
+        }
+
+        // Update the most common bit value at position
+        let least_common_at_pos = least_common_bit_for_pos(&map_keys, pos);
+        println!("Updated most common bit {} for {} remaining entries at position {}",
+                 &least_common_at_pos, &map_keys.len(), &pos
+        );
+
+        filter_to_last_at_pos(&mut input_map, &mut correct_input_to_return, &pos, &least_common_at_pos)
+    }
+
+    correct_input_to_return
+}
+
 pub(crate) fn hashmap_from_inputs(inputs: &Vec<String>) -> HashMap<&String, Vec<usize>> {
     let mut input_map = HashMap::new();
 
@@ -126,6 +151,20 @@ fn most_common_bit_for_pos(inputs: &Vec<String>, position: usize) -> usize {
         1
     } else {
         0
+    }
+}
+
+fn least_common_bit_for_pos(inputs: &Vec<String>, position: usize) -> usize {
+    let half_of_inputs= inputs.len() as f32 / 2 as f32;
+    let bit_counts = bits_column_sum(inputs);
+    let count_for_position = bit_counts.get(position).unwrap();
+
+    if *count_for_position as f32 >= *&half_of_inputs {
+        println!("Ones count {} at position {} over half ({}) of {}",
+                 &count_for_position, position, &half_of_inputs, &inputs.len());
+        0
+    } else {
+        1
     }
 }
 
@@ -174,6 +213,8 @@ fn test_bit_filter() {
     let o2_filter = filter_o2_input(&inputs);
     assert_eq!(o2_filter, "10111");
 
+    let co2_entry = filter_co2_input(&inputs);
+    assert_eq!(co2_entry, "01010")
     // assert_eq!(o2, 23);
     // assert_eq!(co2, 10);
 }
