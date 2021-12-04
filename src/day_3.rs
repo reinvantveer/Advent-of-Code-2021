@@ -63,7 +63,10 @@ fn filter_o2_input(inputs: &Vec<String>) -> String {
             &most_common_at_pos, &map_keys.len(), &pos
         );
 
-        filter_to_last_at_pos(&mut input_map, &mut correct_input_to_return, &pos, &most_common_at_pos)
+        filter_to_last_at_pos(&mut input_map, &mut correct_input_to_return, &pos, &most_common_at_pos);
+        if correct_input_to_return != "".to_string() {
+            break;
+        }
     }
 
     correct_input_to_return
