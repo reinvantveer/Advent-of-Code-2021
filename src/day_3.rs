@@ -79,14 +79,6 @@ fn filter_to_last_at_pos(
     // bit until one entry in the hashmap remains
     for (key, value) in input_map.clone() {
         // Return if the last filtered-out value was found
-        if input_map.len() == 1 {
-            *correct_input_to_return = key.to_string();
-            println!("Found last remaining match");
-            break;
-        } else {
-            println!("{} entries left", &input_map.len());
-        }
-
         let value_at_pos = value.get(*pos).unwrap();
 
         if value_at_pos != most_common_at_pos {
@@ -95,6 +87,23 @@ fn filter_to_last_at_pos(
         } else {
             println!("Keeping {} for {}", &key, &most_common_at_pos);
         }
+
+        if input_map.len() == 1 {
+            let last_remaining_key = input_map
+                .keys()
+                .map(|key| key.to_string())
+                .collect::<Vec<String>>()
+                .first()
+                .unwrap()
+                .clone()
+                .to_string();
+            *correct_input_to_return = last_remaining_key.clone();
+            println!("Found last remaining match: {}", &last_remaining_key);
+            break;
+        } else {
+            println!("{} entries left", &input_map.len());
+        }
+
     }
 }
 
