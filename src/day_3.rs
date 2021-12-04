@@ -6,6 +6,13 @@ pub(crate) fn run() {
     let (gamma, epsilon) = calculate_gamma_epsilon(&inputs);
     println!("Gamma is {}, epsilon is {}", gamma, epsilon);
     println!("These multiplied by each other is {}", gamma * epsilon);
+
+    let o2_entry = filter_o2_input(&inputs);
+    let co2_entry = filter_co2_input(&inputs);
+    let o2_rating = usize_from_binary_string(o2_entry);
+    let co2_rating = usize_from_binary_string(co2_entry);
+    println!("O2 rating is {}, CO2 rating is {}", &o2_rating, &co2_rating);
+    println!("These multiplied is {}", o2_rating * co2_rating);
 }
 
 pub(crate) fn calculate_gamma_epsilon(inputs: &Vec<String>) -> (usize, usize) {
