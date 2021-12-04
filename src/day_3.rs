@@ -47,7 +47,8 @@ fn filter_o2_input(inputs: &Vec<String>) -> String {
     let input_0_len = inputs.get(0).unwrap().len();
 
     // advance one position in the input length a time to filter values
-    for pos in 0..input_0_len - 1 {
+    for pos in 0..input_0_len {
+        println!("Iterating over {} of {} input positions", &pos, &input_0_len);
         // the most common bit has to be recalculated for each jump to the next bit
         // and re-applied on the remaining members of the hashmap
         let mut map_keys = Vec::new();
@@ -56,28 +57,50 @@ fn filter_o2_input(inputs: &Vec<String>) -> String {
             map_keys.push(key.to_string().clone())
         }
 
-        let most_common = most_common_bit_for_pos(&map_keys, pos);
+        let most_common_at_pos = most_common_bit_for_pos(&map_keys, pos);
+        println!("Updated most common bit {} for {} remaining entries at position {}",
+            &most_common_at_pos, &map_keys.len(), &pos
+        );
 
-        // Now, iterate over the hashmap and drop entries as long as they don't meet the most_common
-        // bit until one entry in the hashmap remains
-        for (key, value) in input_map.clone() {
-            // Return if the last filtered-out value was found
-            if input_map.len() > 1 {
-                let value_at_pos = value.get(pos).unwrap();
-
-                if value_at_pos != &most_common {
-                    input_map.remove(&key);
-                }
-            } else {
-                correct_input_to_return = key.to_string();
-                break;
-            };
-        }
+        filter_to_last_at_pos(&mut input_map, &mut correct_input_to_return, &pos, &most_common_at_pos)
     }
 
     correct_input_to_return
 }
 
+fn filter_to_last_at_pos(
+    input_map: &mut HashMap<&String, Vec<usize>>,
+    correct_input_to_return: &mut String,
+    pos: &usize,
+    most_common_at_pos: &usize
+) {
+    // Now, iterate over the hashmap and drop entries as long as they don't meet the most_common
+    // bit until one entry in the hashmap remains
+    for (key, value) in input_map.clone() {
+        // Return if the last filtered-out value was found
+        if input_map.len() == 1 {
+            *correct_input_to_return = key.to_string();
+            println!("Found last remaining match");
+            break;
+        } else {
+            println!("{} entries left", &input_map.len());
+        }
+
+        let value_at_pos = value.get(*pos).unwrap();
+
+        if value_at_pos != most_common_at_pos {
+            input_map.remove(&key);
+            println!("Removing {}: it does not have {} at position {}", &key, &most_common_at_pos, &pos);
+        } else {
+            println!("Keeping {} for {}", &key, &most_common_at_pos);
+        }
+    }
+}
+
+// pub(crate) fn filter_co2_input(inputs: &Vec<String>) -> String {
+//
+// }
+//
 pub(crate) fn hashmap_from_inputs(inputs: &Vec<String>) -> HashMap<&String, Vec<usize>> {
     let mut input_map = HashMap::new();
 
@@ -93,11 +116,13 @@ pub(crate) fn hashmap_from_inputs(inputs: &Vec<String>) -> HashMap<&String, Vec<
 }
 
 fn most_common_bit_for_pos(inputs: &Vec<String>, position: usize) -> usize {
-    let half_of_inputs = inputs.len() / 2;
+    let half_of_inputs= inputs.len() as f32 / 2 as f32;
     let bit_counts = bits_column_sum(inputs);
     let count_for_position = bit_counts.get(position).unwrap();
 
-    if count_for_position >= &half_of_inputs {
+    if *count_for_position as f32 >= *&half_of_inputs {
+        println!("Ones count {} at position {} over half ({}) of {}",
+                 &count_for_position, position, &half_of_inputs, &inputs.len());
         1
     } else {
         0
