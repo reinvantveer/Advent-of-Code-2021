@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
@@ -39,43 +40,63 @@ pub(crate) fn bits_column_sum(inputs: &Vec<String>) -> Vec<usize> {
     bit_counts
 }
 
-pub(crate) fn o2_co2_ratings(inputs: &Vec<String>) -> (usize, usize) {
-    let mut bit_counts = bits_column_sum(inputs);
-    let most_common_bits: Vec<usize> = get_most_common_bits(inputs.len(), &bit_counts);
+fn filter_o2_input(inputs: &Vec<String>) -> String {
+    let mut input_map = HashMap::new();
 
-    let o2_input = get_o2_input(inputs, most_common_bits);
-    (12, 12)
-}
+    // Create hashmap for easier removal manipulation
+    for input in inputs {
+        let input_numbers: Vec<_> = input
+            .chars()
+            .map(|char| char.to_string().parse::<usize>().unwrap())
+            .collect();
+        input_map.insert(input, input_numbers);
+    }
 
-fn get_o2_input(inputs: &Vec<String>, most_common_bits: Vec<usize>) -> &str {
-    let mut to_return = "";
+    let mut correct_input_to_return = "".to_string();
+    let input_0_len = inputs.get(0).unwrap().len();
 
-    for (b_idx, bit) in most_common_bits.iter().enumerate() {
-        for (f_idx, input) in inputs.iter().enumerate() {
-            let chars: Vec<_> = input.chars().collect();
-            if chars[b_idx].to_string() != bit.to_string() && filtered_indices.len() < inputs.len() {
-                filtered_indices.push(f_idx);
+    // advance one position in the input length a time to filter values
+    for pos in 0..input_0_len - 1 {
+        // the most common bit has to be recalculated for each jump to the next bit
+        // and re-applied on the remaining members of the hashmap
+        let mut map_keys = Vec::new();
+
+        for key in input_map.keys() {
+            map_keys.push(key.to_string().clone())
+        }
+
+        let most_common = most_common_bit_for_pos(&map_keys, pos);
+
+        // Now, iterate over the hashmap and drop entries as long as they don't meet the most_common
+        // bit until one entry in the hashmap remains
+        for (key, value) in input_map.clone() {
+            // Return if the last filtered-out value was found
+            if input_map.len() > 1 {
+                let value_at_pos = value.get(pos).unwrap();
+
+                if value_at_pos != &most_common {
+                    input_map.remove(&key);
+                }
             } else {
-                to_return = inputs.get(f_idx).unwrap().as_str().clone()
-            }
+                correct_input_to_return = key.to_string();
+                break;
+            };
         }
     }
 
-    &to_return
+    correct_input_to_return
 }
 
-fn get_most_common_bits(inputs_len: usize, bit_counts: &Vec<usize>) -> Vec<usize> {
-    let half_of_inputs = inputs_len / 2;
+fn most_common_bit_for_pos(inputs: &Vec<String>, position: usize) -> usize {
+    let half_of_inputs = inputs.len() / 2;
+    let bit_counts = bits_column_sum(inputs);
+    let count_for_position = bit_counts.get(position).unwrap();
 
-    bit_counts.iter()
-        .map(|count| {
-            if count >= &half_of_inputs {
-                1 as usize
-            } else {
-                0 as usize
-            }
-        })
-        .collect()
+    if count_for_position >= &half_of_inputs {
+        1
+    } else {
+        0
+    }
 }
 
 #[cfg(test)]
@@ -111,16 +132,15 @@ fn test_gamma_calculation() {
 }
 
 #[test]
-fn test_filter_function() {
+fn test_bit_filter() {
     let inputs = read_lines("data/day_3_sample.txt");
-    let bit_counts = bits_column_sum(&inputs);
-    let most_common_bits = get_most_common_bits(inputs.len(), &bit_counts);
-    assert_eq!(most_common_bits, vec![1, 0, 1, 1, 1]);
+    let most_common_bit_1 = most_common_bit_for_pos(&inputs, 0);
 
-    let filtered = get_o2_input(&inputs, most_common_bits);
-    assert_eq!(filtered, "10111");
+    assert_eq!(most_common_bit_1, 1);
 
-    let (o2, co2) = o2_co2_ratings(&inputs);
-    assert_eq!(o2, 23);
-    assert_eq!(co2, 10);
+    let o2_filter = filter_o2_input(&inputs);
+    assert_eq!(o2_filter, "10111");
+
+    // assert_eq!(o2, 23);
+    // assert_eq!(co2, 10);
 }
