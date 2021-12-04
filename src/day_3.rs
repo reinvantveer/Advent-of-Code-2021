@@ -41,16 +41,7 @@ pub(crate) fn bits_column_sum(inputs: &Vec<String>) -> Vec<usize> {
 }
 
 fn filter_o2_input(inputs: &Vec<String>) -> String {
-    let mut input_map = HashMap::new();
-
-    // Create hashmap for easier removal manipulation
-    for input in inputs {
-        let input_numbers: Vec<_> = input
-            .chars()
-            .map(|char| char.to_string().parse::<usize>().unwrap())
-            .collect();
-        input_map.insert(input, input_numbers);
-    }
+    let mut input_map = hashmap_from_inputs(inputs);
 
     let mut correct_input_to_return = "".to_string();
     let input_0_len = inputs.get(0).unwrap().len();
@@ -85,6 +76,20 @@ fn filter_o2_input(inputs: &Vec<String>) -> String {
     }
 
     correct_input_to_return
+}
+
+pub(crate) fn hashmap_from_inputs(inputs: &Vec<String>) -> HashMap<&String, Vec<usize>> {
+    let mut input_map = HashMap::new();
+
+    // Create hashmap for easier removal manipulation
+    for input in inputs {
+        let input_numbers: Vec<_> = input
+            .chars()
+            .map(|char| char.to_string().parse::<usize>().unwrap())
+            .collect();
+        input_map.insert(input, input_numbers);
+    }
+    input_map
 }
 
 fn most_common_bit_for_pos(inputs: &Vec<String>, position: usize) -> usize {
@@ -135,8 +140,11 @@ fn test_gamma_calculation() {
 fn test_bit_filter() {
     let inputs = read_lines("data/day_3_sample.txt");
     let most_common_bit_1 = most_common_bit_for_pos(&inputs, 0);
-
     assert_eq!(most_common_bit_1, 1);
+
+    let hashmap = hashmap_from_inputs(&inputs);
+    let last_entry = hashmap.get(&"01010".to_string()).unwrap();
+    assert_eq!(*last_entry, vec![0, 1, 0, 1, 0]);
 
     let o2_filter = filter_o2_input(&inputs);
     assert_eq!(o2_filter, "10111");
