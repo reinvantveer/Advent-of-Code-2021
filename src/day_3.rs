@@ -84,7 +84,7 @@ fn filter_to_last_at_pos(
         // Return if the last filtered-out value was found
         let value_at_pos = value.get(*pos).unwrap();
 
-        if value_at_pos != most_common_at_pos {
+        if value_at_pos != most_common_at_pos && input_map.len() > 1 {
             input_map.remove(&key);
             println!("Removing {}: it does not have {} at position {}", &key, &most_common_at_pos, &pos);
         } else {
