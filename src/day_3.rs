@@ -180,6 +180,18 @@ fn least_common_bit_for_pos(inputs: &Vec<String>, position: usize) -> usize {
     }
 }
 
+pub(crate) fn usize_from_binary_string(input: String) -> usize {
+    let mut number = 0 as usize;
+
+    for (idx, char) in input.chars().enumerate() {
+        let reversed_bit_order_idx = input.len() - 1 - idx;
+        let bit = char.to_string().parse::<usize>().unwrap();
+        number += bit * 2_usize.pow(reversed_bit_order_idx as u32);
+    }
+
+    number
+}
+
 #[cfg(test)]
 #[test]
 fn test_bit_counting() {
@@ -222,11 +234,14 @@ fn test_bit_filter() {
     let last_entry = hashmap.get(&"01010".to_string()).unwrap();
     assert_eq!(*last_entry, vec![0, 1, 0, 1, 0]);
 
-    let o2_filter = filter_o2_input(&inputs);
-    assert_eq!(o2_filter, "10111");
+    let o2_entry = filter_o2_input(&inputs);
+    assert_eq!(o2_entry, "10111");
 
     let co2_entry = filter_co2_input(&inputs);
-    assert_eq!(co2_entry, "01010")
-    // assert_eq!(o2, 23);
-    // assert_eq!(co2, 10);
+    assert_eq!(co2_entry, "01010");
+
+    let o2 = usize_from_binary_string(o2_entry);
+    let co2 = usize_from_binary_string(co2_entry);
+    assert_eq!(o2, 23);
+    assert_eq!(co2, 10);
 }
