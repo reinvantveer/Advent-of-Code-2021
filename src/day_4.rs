@@ -60,7 +60,7 @@ pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) -> 
     for number in numbers {
         mark_number(boards, number);
         if let Some(board_idx) = bingo(&boards) {
-            println!("Bingo on board {}", board_idx);
+            println!("Bingo on board index {}", board_idx);
             board = Some(boards.get(board_idx).unwrap().clone());
         }
     }
@@ -69,7 +69,38 @@ pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) -> 
 }
 
 pub(crate) fn bingo(boards: &Vec<Board>) -> Option<usize> {
-    None
+    let bingo_board = None;
+
+    for (board_idx, board) in boards.iter().enumerate() {
+        // Bingo in row?
+        for row in board {
+            // Assume all-None to start
+            let mut all_none = true;
+
+            for entry in row {
+                if let Some(_) = entry { all_none = false; }
+            }
+
+            if all_none {
+                // Finish after finding bingo
+                return Some(board_idx);
+            }
+        }
+
+        // Bingo in column?
+        let mut transposed: Board = vec![vec![None; 5]; 5];
+        for (r_idx, row) in board.iter().enumerate() {
+            for (e_idx, entry) in row.iter().enumerate() {
+                let mut transposed_entry = transposed
+                    .get(e_idx).unwrap()
+                    .get(r_idx).unwrap();
+                transposed_entry = entry;
+            }
+        }
+        board.transpose()
+    }
+
+    bingo_board
 }
 
 #[cfg(test)]
@@ -112,7 +143,7 @@ fn test_mark_number_on_board() {
 }
 
 #[test]
-fn test_bingo(){
+fn test_bingo() {
     let inputs = read_lines("data/day_4_sample.txt");
     let (number_calls, mut boards) = parse_bingo_data(inputs);
 
@@ -120,7 +151,14 @@ fn test_bingo(){
     for number in number_calls[..13].iter() {
         mark_number(&mut boards, *number)
     }
-    assert_eq!(bingo(&boards), Some(3));
+    let maybe_board_idx = bingo(&boards);
+    assert_eq!(maybe_board_idx, Some(2));
+}
+
+#[test]
+fn test_mark_until_bingo() {
+    let inputs = read_lines("data/day_4_sample.txt");
+    let (number_calls, mut boards) = parse_bingo_data(inputs);
 
     let first_13_numbers = number_calls[..13]
         .iter()
@@ -128,5 +166,6 @@ fn test_bingo(){
         .collect();
     let maybe_bingo = mark_until_bingo(first_13_numbers, &mut boards).unwrap();
     let first_board_entry = *maybe_bingo.first().unwrap().first().unwrap();
-    assert_eq!(first_board_entry, Some(14));
+    // The first entry on the winning board was marked in one of the called numbers!
+    assert_eq!(first_board_entry, None);
 }
