@@ -18,7 +18,6 @@ pub fn main() {
             .help("Which day of the advent to run"))
         .get_matches();
 
-
     let day = matches.value_of("day").unwrap();
     println!("Running solutions for day {}", &day);
     match day {
