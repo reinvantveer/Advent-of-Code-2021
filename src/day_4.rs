@@ -2,19 +2,28 @@ use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
     let inputs = read_lines("data/day_4_input.txt");
-    let (numbers, mut boards) = parse_bingo_data(inputs);
+    let (numbers, mut boards) = parse_bingo_data(&inputs);
     let (last_number, board) = mark_until_bingo(numbers, &mut boards).unwrap();
     let sum = sum_of_unmarked(&board);
 
     println!("Winning board has sum {} on last number {}", sum, last_number);
     println!("Multiplied, this is {}", sum * last_number);
+
+    // Part 2
+    let (numbers, mut boards) = parse_bingo_data(&inputs);
+    let (last_number, board) = mark_until_last_bingo(numbers, &mut boards).unwrap();
+    let sum = sum_of_unmarked(&board);
+
+    println!("Last winning board has sum {} on last number {}", sum, last_number);
+    println!("Multiplied, this is {}", sum * last_number);
+
 }
 
 type Board = Vec<Vec<Option<usize>>>;
 
 /// Parses the bingo data, consisting of a first line of bingo number calls,
 /// followed by blank-line separated bingo boards
-pub(crate) fn parse_bingo_data(inputs: Vec<String>) -> (Vec<usize>, Vec<Board>) {
+pub(crate) fn parse_bingo_data(inputs: &Vec<String>) -> (Vec<usize>, Vec<Board>) {
     let numbers = inputs.iter().next().unwrap();
     let number_calls = numbers
         .split(",")
@@ -66,6 +75,37 @@ pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) -> 
         if let Some(board_idx) = bingo(&boards) {
             println!("Bingo on board index {}", board_idx);
             return Some((number, boards.get(board_idx).unwrap().clone()));
+        }
+    }
+
+    None
+}
+
+pub(crate) fn mark_until_last_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) -> Option<(usize, Board)> {
+    let mut remaining_boards_idxs: Vec<usize> = (0..boards.len()).collect::<Vec<usize>>();
+
+    for number in numbers {
+        mark_number(boards, number);
+
+        for (board_idx, board) in boards.clone().iter().enumerate() {
+            let remaining_board_idxs_pos_option = remaining_boards_idxs
+                .iter()
+                .position(|b| b == &board_idx);
+
+            if let Some(winning_board_idxs_pos) = remaining_board_idxs_pos_option{
+                let transposed = transpose(&board);
+
+                if row_bingo(&board){
+                    remaining_boards_idxs.remove(winning_board_idxs_pos);
+                } else if row_bingo(&transposed) {
+                    remaining_boards_idxs.remove(winning_board_idxs_pos);
+                }
+            }
+
+            if remaining_boards_idxs.len() == 0 {
+                let remaining_board = board.clone();
+                return Some((number, remaining_board))
+            }
         }
     }
 
@@ -135,7 +175,7 @@ fn sum_of_unmarked(board: &Board) -> usize {
 #[test]
 fn test_bingo_data_parser() {
     let inputs = read_lines("data/day_4_sample.txt");
-    let (number_calls, boards) = parse_bingo_data(inputs);
+    let (number_calls, boards) = parse_bingo_data(&inputs);
     assert_eq!(
         number_calls,
         vec![7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1]
@@ -156,7 +196,7 @@ fn test_bingo_data_parser() {
 #[test]
 fn test_mark_number_on_board() {
     let inputs = read_lines("data/day_4_sample.txt");
-    let (_, mut boards) = parse_bingo_data(inputs);
+    let (_, mut boards) = parse_bingo_data(&inputs);
     mark_number(&mut boards, 22);
 
     // Validate that the very first number on the first board is now crossed off
@@ -173,7 +213,7 @@ fn test_mark_number_on_board() {
 #[test]
 fn test_bingo() {
     let inputs = read_lines("data/day_4_sample.txt");
-    let (number_calls, mut boards) = parse_bingo_data(inputs);
+    let (number_calls, mut boards) = parse_bingo_data(&inputs);
 
     // The 13th draw should result in bingo on the third board
     for number in number_calls[..13].iter() {
@@ -186,7 +226,7 @@ fn test_bingo() {
 #[test]
 fn test_mark_until_bingo() {
     let inputs = read_lines("data/day_4_sample.txt");
-    let (number_calls, mut boards) = parse_bingo_data(inputs);
+    let (number_calls, mut boards) = parse_bingo_data(&inputs);
 
     let first_13_numbers = number_calls[..13]
         .iter()
@@ -201,11 +241,23 @@ fn test_mark_until_bingo() {
 #[test]
 fn test_sum_of_unmarked() {
     let inputs = read_lines("data/day_4_sample.txt");
-    let (number_calls, mut boards) = parse_bingo_data(inputs);
+    let (number_calls, mut boards) = parse_bingo_data(&inputs);
 
     let (last_number, winning_board) = mark_until_bingo(number_calls, &mut boards).unwrap();
     assert_eq!(last_number, 24);
 
     let sum = sum_of_unmarked(&winning_board);
     assert_eq!(sum, 188)
+}
+
+#[test]
+fn test_mark_until_last_bingo() {
+    let inputs = read_lines("data/day_4_sample.txt");
+    let (number_calls, mut boards) = parse_bingo_data(&inputs);
+
+    let (last_number, last_winning_board) = mark_until_last_bingo(number_calls, &mut boards).unwrap();
+    assert_eq!(last_number, 13);
+
+    let sum = sum_of_unmarked(&last_winning_board);
+    assert_eq!(sum, 148)
 }
