@@ -69,38 +69,47 @@ pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) -> 
 }
 
 pub(crate) fn bingo(boards: &Vec<Board>) -> Option<usize> {
-    let bingo_board = None;
-
     for (board_idx, board) in boards.iter().enumerate() {
-        // Bingo in row?
-        for row in board {
-            // Assume all-None to start
-            let mut all_none = true;
+        if row_bingo(board){ return Some(board_idx); };
 
-            for entry in row {
-                if let Some(_) = entry { all_none = false; }
-            }
-
-            if all_none {
-                // Finish after finding bingo
-                return Some(board_idx);
-            }
-        }
-
-        // Bingo in column?
-        let mut transposed: Board = vec![vec![None; 5]; 5];
-        for (r_idx, row) in board.iter().enumerate() {
-            for (e_idx, entry) in row.iter().enumerate() {
-                let mut transposed_entry = transposed
-                    .get(e_idx).unwrap()
-                    .get(r_idx).unwrap();
-                transposed_entry = entry;
-            }
-        }
-        board.transpose()
+        let transposed = transpose(board);
+        if row_bingo(&transposed) { return Some(board_idx); }
     }
 
-    bingo_board
+    None
+}
+
+fn transpose(board: &Board) -> Board {
+// Bingo in column?
+    let mut transposed: Board = vec![vec![None; 5]; 5];
+    for (r_idx, row) in board.iter().enumerate() {
+        for (e_idx, entry) in row.iter().enumerate() {
+            let mut transposed_entry = transposed
+                .get(e_idx).unwrap()
+                .get(r_idx).unwrap();
+            transposed_entry = entry;
+        }
+    }
+    transposed
+}
+
+fn row_bingo(board: &Board) -> bool {
+// Bingo in row?
+    for row in board {
+        // Assume all-None to start
+        let mut all_none = true;
+
+        for entry in row {
+            if let Some(_) = entry { all_none = false; }
+        }
+
+        if all_none {
+            // Finish after finding bingo
+            return true;
+        }
+    }
+
+    false
 }
 
 #[cfg(test)]
