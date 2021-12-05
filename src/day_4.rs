@@ -4,9 +4,11 @@ pub(crate) fn run() {
 
 }
 
+type Board = Vec<Vec<Option<usize>>>;
+
 /// Parses the bingo data, consisting of a first line of bingo number calls,
 /// followed by blank-line separated bingo boards
-pub(crate) fn parse_bingo_data(inputs: Vec<String>) -> (Vec<usize>, Vec<Vec<Vec<usize>>>) {
+pub(crate) fn parse_bingo_data(inputs: Vec<String>) -> (Vec<usize>, Vec<Board>) {
     let numbers = inputs.iter().next().unwrap();
     let number_calls = numbers
         .split(",")
@@ -22,8 +24,8 @@ pub(crate) fn parse_bingo_data(inputs: Vec<String>) -> (Vec<usize>, Vec<Vec<Vec<
 
         let numbers = &mut line
             .split_ascii_whitespace()
-            .map(|n| n.parse::<usize>().unwrap())
-            .collect::<Vec<usize>>();
+            .map(|n| Some(n.parse::<usize>().unwrap()))
+            .collect::<Vec<Option<usize>>>();
         // println!("Appending {:?}", &numbers);
         board.push(numbers.clone());
 
@@ -34,6 +36,20 @@ pub(crate) fn parse_bingo_data(inputs: Vec<String>) -> (Vec<usize>, Vec<Vec<Vec<
     }
 
     (number_calls, boards)
+}
+
+pub(crate) fn mark_number(boards: &mut Vec<Board>, number: usize) {
+    for board in boards {
+        for row in board {
+            for number_entry in row {
+                if let Some(board_number) = number_entry {
+                    if *board_number == number {
+                        *number_entry = None;
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -56,5 +72,21 @@ fn test_bingo_data_parser() {
     let last_board_last_row = last_board.last().unwrap();
     assert_eq!(first_board_first_row.len(), 5);
     assert_eq!(last_board_last_row.len(), 5);
+}
 
+#[test]
+fn test_mark_number_on_board() {
+    let inputs = read_lines("data/day_4_sample.txt");
+    let (_, mut boards) = parse_bingo_data(inputs);
+    mark_number(&mut boards, 22);
+
+    // Validate that the very first number on the first board is now crossed off
+    let first_board = boards.first().unwrap();
+    let first_board_first_row = first_board.first().unwrap();
+    let first_board_first_row_first_entry = first_board_first_row.first().unwrap();
+    assert_eq!(*first_board_first_row_first_entry, None);
+
+    // Validate that the next nubmer isn't touched
+    let first_board_first_row_second_entry = first_board_first_row.get(1).unwrap();
+    assert_eq!(*first_board_first_row_second_entry, Some(13));
 }
