@@ -1,7 +1,13 @@
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
+    let inputs = read_lines("data/day_4_input.txt");
+    let (numbers, mut boards) = parse_bingo_data(inputs);
+    let (last_number, board) = mark_until_bingo(numbers, &mut boards).unwrap();
+    let sum = sum_of_unmarked(&board);
 
+    println!("Winning board has sum {} on last number {}", sum, last_number);
+    println!("Multiplied, this is {}", sum * last_number);
 }
 
 type Board = Vec<Vec<Option<usize>>>;
