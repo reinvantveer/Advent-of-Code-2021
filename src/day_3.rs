@@ -55,7 +55,7 @@ fn filter_o2_input(inputs: &Vec<String>) -> String {
 
     // advance one position in the input length a time to filter values
     for pos in 0..input_0_len {
-        println!("Iterating over {} of {} input positions", &pos, &input_0_len);
+        // println!("Iterating over {} of {} input positions", &pos, &input_0_len);
         // the most common bit has to be recalculated for each jump to the next bit
         // and re-applied on the remaining members of the hashmap
         let mut map_keys = Vec::new();
@@ -66,9 +66,9 @@ fn filter_o2_input(inputs: &Vec<String>) -> String {
 
         // Update the most common bit value at position
         let most_common_at_pos = most_common_bit_for_pos(&map_keys, pos);
-        println!("Updated most common bit {} for {} remaining entries at position {}",
-            &most_common_at_pos, &map_keys.len(), &pos
-        );
+        // println!("Updated most common bit {} for {} remaining entries at position {}",
+        //     &most_common_at_pos, &map_keys.len(), &pos
+        // );
 
         filter_to_last_at_pos(&mut input_map, &mut correct_input_to_return, &pos, &most_common_at_pos);
         if correct_input_to_return != "".to_string() {
@@ -93,9 +93,9 @@ fn filter_to_last_at_pos(
 
         if value_at_pos != most_common_at_pos && input_map.len() > 1 {
             input_map.remove(&key);
-            println!("Removing {}: it does not have {} at position {}", &key, &most_common_at_pos, &pos);
+            // println!("Removing {}: it does not have {} at position {}", &key, &most_common_at_pos, &pos);
         } else {
-            println!("Keeping {} for {}", &key, &most_common_at_pos);
+            // println!("Keeping {} for {}", &key, &most_common_at_pos);
         }
 
         if input_map.len() == 1 {
@@ -108,10 +108,10 @@ fn filter_to_last_at_pos(
                 .clone()
                 .to_string();
             *correct_input_to_return = last_remaining_key.clone();
-            println!("Found last remaining match: {}", &last_remaining_key);
+            // println!("Found last remaining match: {}", &last_remaining_key);
             break;
         } else {
-            println!("{} entries left", &input_map.len());
+            // println!("{} entries left", &input_map.len());
         }
 
     }
@@ -124,7 +124,7 @@ pub(crate) fn filter_co2_input(inputs: &Vec<String>) -> String {
 
     // advance one position in the input length a time to filter values
     for pos in 0..input_0_len {
-        println!("Iterating over {} of {} input positions", &pos, &input_0_len);
+        // println!("Iterating over {} of {} input positions", &pos, &input_0_len);
         // the most common bit has to be recalculated for each jump to the next bit
         // and re-applied on the remaining members of the hashmap
         let mut map_keys = Vec::new();
@@ -135,9 +135,9 @@ pub(crate) fn filter_co2_input(inputs: &Vec<String>) -> String {
 
         // Update the most common bit value at position
         let least_common_at_pos = least_common_bit_for_pos(&map_keys, pos);
-        println!("Updated most common bit {} for {} remaining entries at position {}",
-                 &least_common_at_pos, &map_keys.len(), &pos
-        );
+        // println!("Updated most common bit {} for {} remaining entries at position {}",
+        //          &least_common_at_pos, &map_keys.len(), &pos
+        // );
 
         filter_to_last_at_pos(&mut input_map, &mut correct_input_to_return, &pos, &least_common_at_pos)
     }
@@ -165,8 +165,8 @@ fn most_common_bit_for_pos(inputs: &Vec<String>, position: usize) -> usize {
     let count_for_position = bit_counts.get(position).unwrap();
 
     if *count_for_position as f32 >= *&half_of_inputs {
-        println!("Ones count {} at position {} over half ({}) of {}",
-                 &count_for_position, position, &half_of_inputs, &inputs.len());
+        // println!("Ones count {} at position {} over half ({}) of {}",
+        //          &count_for_position, position, &half_of_inputs, &inputs.len());
         1
     } else {
         0
@@ -179,8 +179,8 @@ fn least_common_bit_for_pos(inputs: &Vec<String>, position: usize) -> usize {
     let count_for_position = bit_counts.get(position).unwrap();
 
     if *count_for_position as f32 >= *&half_of_inputs {
-        println!("Ones count {} at position {} over half ({}) of {}",
-                 &count_for_position, position, &half_of_inputs, &inputs.len());
+        // println!("Ones count {} at position {} over half ({}) of {}",
+        //          &count_for_position, position, &half_of_inputs, &inputs.len());
         0
     } else {
         1
