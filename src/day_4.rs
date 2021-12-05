@@ -52,13 +52,22 @@ pub(crate) fn mark_number(boards: &mut Vec<Board>, number: usize) {
     }
 }
 
-pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) {
+pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) -> Option<Board> {
+    let mut board = None;
+
     for number in numbers {
         mark_number(boards, number);
-        if let Some(board_idx) = bingo(boards) {
-            println!("Bingo on board {}", board)
+        if let Some(board_idx) = bingo(&boards) {
+            println!("Bingo on board {}", board_idx);
+            board = Some(boards.get(board_idx).unwrap().clone());
         }
     }
+
+    board
+}
+
+pub(crate) fn bingo(boards: &Vec<Board>) -> Option<usize> {
+    None
 }
 
 #[cfg(test)]
@@ -103,10 +112,19 @@ fn test_mark_number_on_board() {
 #[test]
 fn test_bingo(){
     let inputs = read_lines("data/day_4_sample.txt");
-    let (number_calls, boards) = parse_bingo_data(inputs);
+    let (number_calls, mut boards) = parse_bingo_data(inputs);
 
     // The 13th draw should result in bingo on the third board
-    let first_13_numbers = number_calls[..13].iter().collect();
-    let maybe_bingo = mark_until_bingo(first_13_numbers, &mut boards);
-    assert_eq!(maybe_bingo, Some(3));
+    for number in number_calls[..13].iter() {
+        mark_number(&mut boards, *number)
+    }
+    assert_eq!(bingo(&boards), Some(3));
+
+    let first_13_numbers = number_calls[..13]
+        .iter()
+        .map(|n| *n)
+        .collect();
+    let maybe_bingo = mark_until_bingo(first_13_numbers, &mut boards).unwrap();
+    let first_board_entry = *maybe_bingo.first().unwrap().first().unwrap();
+    assert_eq!(first_board_entry, Some(14));
 }
