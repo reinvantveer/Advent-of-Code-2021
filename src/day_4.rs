@@ -72,22 +72,23 @@ pub(crate) fn bingo(boards: &Vec<Board>) -> Option<usize> {
     for (board_idx, board) in boards.iter().enumerate() {
         if row_bingo(board){ return Some(board_idx); };
 
+        // Bingo in column?
         let transposed = transpose(board);
-        if row_bingo(&transposed) { return Some(board_idx); }
+        if row_bingo(&transposed) {
+            return Some(board_idx);
+        }
     }
 
     None
 }
 
 fn transpose(board: &Board) -> Board {
-// Bingo in column?
     let mut transposed: Board = vec![vec![None; 5]; 5];
     for (r_idx, row) in board.iter().enumerate() {
         for (e_idx, entry) in row.iter().enumerate() {
-            let mut transposed_entry = transposed
-                .get(e_idx).unwrap()
-                .get(r_idx).unwrap();
-            transposed_entry = entry;
+            if let Some(value) = entry {
+                transposed[e_idx][r_idx] = Some(value.clone());
+            }
         }
     }
     transposed
