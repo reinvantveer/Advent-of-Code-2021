@@ -52,6 +52,15 @@ pub(crate) fn mark_number(boards: &mut Vec<Board>, number: usize) {
     }
 }
 
+pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) {
+    for number in numbers {
+        mark_number(boards, number);
+        if let Some(board_idx) = bingo(boards) {
+            println!("Bingo on board {}", board)
+        }
+    }
+}
+
 #[cfg(test)]
 #[test]
 fn test_bingo_data_parser() {
@@ -86,7 +95,18 @@ fn test_mark_number_on_board() {
     let first_board_first_row_first_entry = first_board_first_row.first().unwrap();
     assert_eq!(*first_board_first_row_first_entry, None);
 
-    // Validate that the next nubmer isn't touched
+    // Validate that the next number isn't touched
     let first_board_first_row_second_entry = first_board_first_row.get(1).unwrap();
     assert_eq!(*first_board_first_row_second_entry, Some(13));
+}
+
+#[test]
+fn test_bingo(){
+    let inputs = read_lines("data/day_4_sample.txt");
+    let (number_calls, boards) = parse_bingo_data(inputs);
+
+    // The 13th draw should result in bingo on the third board
+    let first_13_numbers = number_calls[..13].iter().collect();
+    let maybe_bingo = mark_until_bingo(first_13_numbers, &mut boards);
+    assert_eq!(maybe_bingo, Some(3));
 }
