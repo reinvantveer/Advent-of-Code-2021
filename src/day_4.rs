@@ -53,19 +53,17 @@ pub(crate) fn mark_number(boards: &mut Vec<Board>, number: usize) {
 }
 
 /// Mark numbers on all boards until we have a bingo, which in that case returns Some(Board)
-pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) -> Option<Board> {
+pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) -> Option<(usize, Board)> {
     // The default option: None
-    let mut board = None;
-
     for number in numbers {
         mark_number(boards, number);
         if let Some(board_idx) = bingo(&boards) {
             println!("Bingo on board index {}", board_idx);
-            board = Some(boards.get(board_idx).unwrap().clone());
+            return Some((number, boards.get(board_idx).unwrap().clone()));
         }
     }
 
-    board
+    None
 }
 
 pub(crate) fn bingo(boards: &Vec<Board>) -> Option<usize> {
@@ -111,6 +109,20 @@ fn row_bingo(board: &Board) -> bool {
     }
 
     false
+}
+
+fn sum_of_unmarked(board: &Board) -> usize {
+    let mut total = 0_usize;
+
+    for row in board {
+        for entry in row {
+            if let Some(number) = entry {
+                total += number;
+            }
+        }
+    }
+
+    total
 }
 
 #[cfg(test)]
@@ -174,8 +186,20 @@ fn test_mark_until_bingo() {
         .iter()
         .map(|n| *n)
         .collect();
-    let maybe_bingo = mark_until_bingo(first_13_numbers, &mut boards).unwrap();
+    let (_, maybe_bingo) = mark_until_bingo(first_13_numbers, &mut boards).unwrap();
     let first_board_entry = *maybe_bingo.first().unwrap().first().unwrap();
     // The first entry on the winning board was marked in one of the called numbers!
     assert_eq!(first_board_entry, None);
+}
+
+#[test]
+fn test_sum_of_unmarked() {
+    let inputs = read_lines("data/day_4_sample.txt");
+    let (number_calls, mut boards) = parse_bingo_data(inputs);
+
+    let (last_number, winning_board) = mark_until_bingo(number_calls, &mut boards).unwrap();
+    assert_eq!(last_number, 24);
+
+    let sum = sum_of_unmarked(&winning_board);
+    assert_eq!(sum, 188)
 }
