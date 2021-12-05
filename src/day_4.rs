@@ -52,7 +52,9 @@ pub(crate) fn mark_number(boards: &mut Vec<Board>, number: usize) {
     }
 }
 
+/// Mark numbers on all boards until we have a bingo, which in that case returns Some(Board)
 pub(crate) fn mark_until_bingo(numbers: Vec<usize>, boards: &mut Vec<Board>) -> Option<Board> {
+    // The default option: None
     let mut board = None;
 
     for number in numbers {
