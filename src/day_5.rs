@@ -63,25 +63,30 @@ pub(crate) fn parse_lines(inputs: &Vec<String>, parse_diagonals: bool) -> (Vec<L
                 .collect::<Line>();
             hor_lines.push(line);
         } else {
-            if !parse_diagonals { continue; }
             // println!("Line is diagonal");
-            let range = match end_point[0] > start_point[0] {
-                true => start_point[0]..end_point[0] + 1,
-                false => end_point[0]..start_point[0] + 1,
+            // Skip if we're on part 1
+            if !parse_diagonals { continue; }
+
+            let x_increases = end_point[0] > start_point[0];
+            let x_range;
+
+            match x_increases {
+                true => x_range = start_point[0]..end_point[0] + 1,
+                false => x_range = end_point[0]..start_point[0] + 1,
             };
 
             let start_y = start_point[1];
-            let y_is_up = end_point[1] > start_y;
-            let mut y_pos = start_y;
+            let end_y = end_point[1];
 
-            let line = (range)
-                .map(|x| {
-                    let y = match y_is_up {
-                        true => { y_pos += 1; y_pos }
-                        false => { y_pos -= 1; y_pos }
-                    };
-                    (x, y)
-                })
+            let y_increases = end_y > start_y;
+            let mut y_range = match y_increases {
+                true => (start_y..end_y + 1).collect::<Vec<_>>(),
+                false => (end_y..start_y + 1).collect::<Vec<_>>(),
+            };
+            // If either x range is reversed XOR the y range: reverse the y range to align the range orders
+            if x_increases ^ y_increases { y_range.reverse() }
+
+            let line = (x_range).zip(y_range)
                 .collect::<Line>();
             dia_lines.push(line);
         }
@@ -174,5 +179,32 @@ fn test_diagonal_line_parser() {
     let (_, _, dia_lines) = parse_lines(&inputs, true);
 
     assert_eq!(dia_lines.len(), 4);
-    assert_eq!(dia_lines[0], vec![(8, 0), (7, 1), (6, 2), (5, 3), (4, 4), (3, 5), (2, 6), (1, 7), (0, 8)]);
+
+    let mut expected_line = vec![(8, 0), (7, 1), (6, 2), (5, 3), (4, 4), (3, 5), (2, 6), (1, 7), (0, 8)];
+    expected_line.reverse();
+    assert_eq!(dia_lines[0], expected_line);
+
+    expected_line = vec![(2, 0), (3, 1), (4, 2), (5, 3), (6, 4)];
+    assert_eq!(dia_lines[1], expected_line);
+
+    expected_line = vec![(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (7, 7), (8, 8)];
+    assert_eq!(dia_lines[2], expected_line);
+
+    expected_line = vec![(5, 5), (6, 4), (7, 3), (8, 2)];
+    assert_eq!(dia_lines[3], expected_line);
+}
+
+#[test]
+fn test_straight_and_diagonal_grid_hotspot_counts() {
+    let inputs = read_lines("data/day_5_sample.txt");
+    let (hor_lines, ver_lines, dia_lines) = parse_lines(&inputs, true);
+    let mut all_lines = hor_lines;
+    all_lines.extend(ver_lines);
+    all_lines.extend(dia_lines);
+
+    let grid = grid_sum_from_lines(&all_lines);
+    let num_hotspots = hotspots_count(&grid);
+
+    assert_eq!(num_hotspots, 12);
+
 }
