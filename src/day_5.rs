@@ -2,14 +2,18 @@ use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
     let inputs = read_lines("data/day_5_input.txt");
-    let (hor_lines, ver_lines, dia_lines) = parse_lines(&inputs, false);
+    let (hor_lines, ver_lines, dia_lines) = parse_lines(&inputs, true);
     let mut all_lines = hor_lines;
     all_lines.extend(ver_lines);
-    all_lines.extend(dia_lines);
-    let grid = grid_sum_from_lines(&all_lines);
-    let score = hotspots_count(&grid);
+    let mut grid = grid_sum_from_lines(&all_lines);
+    let mut score = hotspots_count(&grid);
 
     println!("The total number of crossing horizontal and vertical lines in the grid is {}", &score);
+
+    all_lines.extend(dia_lines);
+    grid = grid_sum_from_lines(&all_lines);
+    score = hotspots_count(&grid);
+    println!("The total number of all crossing lines in the grid is {}", &score);
 }
 
 type Point = (usize, usize);
