@@ -1,6 +1,14 @@
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
+    let inputs = read_lines("data/day_6_input.txt");
+    let mut school = parse_school(&inputs);
+    procreate_for_days(&mut school, 80);
+
+    println!("School size after 80 days is {}", school.len());
+
+    procreate_for_days(&mut school, 256 - 80);
+    println!("School size after 256 days is {}", school.len());
 
 }
 
@@ -11,6 +19,19 @@ pub(crate) fn parse_school(inputs: &Vec<String>) -> Vec<usize> {
         .collect();
 
     start_population
+}
+
+pub(crate) fn parse_dense_school(inputs: &Vec<String>) -> Vec<usize> {
+    let mut age_population = vec![0; 9];
+
+    inputs[0]
+        .split(",")
+        .for_each(|f| {
+            let fish_age = f.parse::<usize>().unwrap();
+            age_population[fish_age] += 1;
+        });
+
+    age_population
 }
 
 pub(crate) fn procreate(school: &mut Vec<usize>) {
@@ -30,8 +51,12 @@ pub(crate) fn procreate(school: &mut Vec<usize>) {
 }
 
 pub(crate) fn procreate_for_days(school: &mut Vec<usize>, days: usize) {
-    for _ in 0..days {
+    for day in 0..days {
         procreate(school);
+        if day % 10 == 0 {
+            let school_size = school.len();
+            println!("Procreated day {}, school size: {}", day, school_size);
+        }
     }
 }
 
