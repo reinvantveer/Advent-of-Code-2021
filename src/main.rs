@@ -28,6 +28,7 @@ pub fn main() {
         "3" => { day_3::run() },
         "4" => { day_4::run() },
         "5" => { day_5::run() },
+        "6" => { day_6::run() },
         _ => { todo!("This day isn't implemented (yet)") },
     };
 }
