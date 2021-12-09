@@ -7,9 +7,10 @@ pub(crate) fn run() {
 
     println!("School size after 80 days is {}", school.len());
 
-    procreate_for_days(&mut school, 256 - 80);
-    println!("School size after 256 days is {}", school.len());
-
+    let mut school_bins = parse_smart_school(&inputs);
+    smart_procreate_for_days(&mut school_bins, 256);
+    let school_size = school_bins.iter().sum::<usize>();
+    println!("School size after 256 days is {}", school_size);
 }
 
 pub(crate) fn parse_school(inputs: &Vec<String>) -> Vec<usize> {
@@ -21,7 +22,7 @@ pub(crate) fn parse_school(inputs: &Vec<String>) -> Vec<usize> {
     start_population
 }
 
-pub(crate) fn parse_dense_school(inputs: &Vec<String>) -> Vec<usize> {
+pub(crate) fn parse_smart_school(inputs: &Vec<String>) -> Vec<usize> {
     let mut age_population = vec![0; 9];
 
     inputs[0]
@@ -37,17 +38,22 @@ pub(crate) fn parse_dense_school(inputs: &Vec<String>) -> Vec<usize> {
 pub(crate) fn procreate(school: &mut Vec<usize>) {
     let mut new_fish = Vec::new();
 
-    for fish in &mut *school {
-        if *fish == 0 {
-            *fish = 6;
+    for fish_procreate_countdown in &mut *school {
+        if *fish_procreate_countdown == 0 {
+            *fish_procreate_countdown = 6;
             new_fish.push(8);
             continue;
         }
 
-        *fish -= 1;
+        *fish_procreate_countdown -= 1;
     }
 
     school.extend(new_fish);
+}
+
+pub(crate) fn smart_procreate(school_bins: &mut Vec<usize>) {
+    school_bins.rotate_left(1);
+    school_bins[6] += school_bins[8];
 }
 
 pub(crate) fn procreate_for_days(school: &mut Vec<usize>, days: usize) {
@@ -57,6 +63,12 @@ pub(crate) fn procreate_for_days(school: &mut Vec<usize>, days: usize) {
             let school_size = school.len();
             println!("Procreated day {}, school size: {}", day, school_size);
         }
+    }
+}
+
+pub(crate) fn smart_procreate_for_days(school_bins: &mut Vec<usize>, days: usize) {
+    for day in 0..days {
+        smart_procreate(school_bins);
     }
 }
 
@@ -81,4 +93,29 @@ fn test_procreate_for_80_days() {
 
     procreate_for_days(&mut school, 80);
     assert_eq!(school.len(), 5934);
+}
+
+#[test]
+fn test_parse_smart_school() {
+    let inputs = read_lines("data/day_6_sample.txt");
+    let mut school = parse_smart_school(&inputs);
+
+    assert_eq!(school, vec![0, 1, 1, 2, 1, 0, 0, 0, 0])
+}
+
+#[test]
+fn test_count_smart_school_procreation() {
+    let inputs = read_lines("data/day_6_sample.txt");
+    let mut school_bins = parse_smart_school(&inputs);
+    assert_eq!(school_bins, vec![0, 1, 1, 2, 1, 0, 0, 0, 0]);
+
+    smart_procreate(&mut school_bins);
+    assert_eq!(school_bins, vec![1, 1, 2, 1, 0, 0, 0, 0, 0]);
+
+    smart_procreate(&mut school_bins);
+    assert_eq!(school_bins, vec![1, 2, 1, 0, 0, 0, 1, 0, 1]);
+
+    // Already procreated twice
+    smart_procreate_for_days(&mut school_bins, 80 - 2);
+    assert_eq!(school_bins.iter().sum::<usize>(), 5934)
 }
