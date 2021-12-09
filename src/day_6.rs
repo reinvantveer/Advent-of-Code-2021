@@ -1,8 +1,8 @@
-use advent_of_code_2021::read_lines;
+use advent_of_code_2021::{parse_vec_usize, read_lines};
 
 pub(crate) fn run() {
     let inputs = read_lines("data/day_6_input.txt");
-    let mut school = parse_school(&inputs);
+    let mut school = parse_vec_usize(&inputs);
     procreate_for_days(&mut school, 80);
 
     println!("School size after 80 days is {}", school.len());
@@ -11,15 +11,6 @@ pub(crate) fn run() {
     smart_procreate_for_days(&mut school_bins, 256);
     let school_size = school_bins.iter().sum::<usize>();
     println!("School size after 256 days is {}", school_size);
-}
-
-pub(crate) fn parse_school(inputs: &Vec<String>) -> Vec<usize> {
-    let start_population = inputs[0]
-        .split(",")
-        .map(|f| f.parse::<usize>().unwrap())
-        .collect();
-
-    start_population
 }
 
 pub(crate) fn parse_smart_school(inputs: &Vec<String>) -> Vec<usize> {
@@ -76,9 +67,7 @@ pub(crate) fn smart_procreate_for_days(school_bins: &mut Vec<usize>, days: usize
 #[test]
 fn test_procreate() {
     let inputs = read_lines("data/day_6_sample.txt");
-    let mut school = parse_school(&inputs);
-    assert_eq!(school, vec![3, 4, 3, 1, 2]);
-
+    let mut school = parse_vec_usize(&inputs);
     procreate(&mut school);
     assert_eq!(school, vec![2, 3, 2, 0, 1]);
 
@@ -89,7 +78,7 @@ fn test_procreate() {
 #[test]
 fn test_procreate_for_80_days() {
     let inputs = read_lines("data/day_6_sample.txt");
-    let mut school = parse_school(&inputs);
+    let mut school = parse_vec_usize(&inputs);
 
     procreate_for_days(&mut school, 80);
     assert_eq!(school.len(), 5934);
@@ -98,8 +87,7 @@ fn test_procreate_for_80_days() {
 #[test]
 fn test_parse_smart_school() {
     let inputs = read_lines("data/day_6_sample.txt");
-    let mut school = parse_smart_school(&inputs);
-
+    let school = parse_smart_school(&inputs);
     assert_eq!(school, vec![0, 1, 1, 2, 1, 0, 0, 0, 0])
 }
 

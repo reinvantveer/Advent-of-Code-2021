@@ -10,3 +10,21 @@ pub fn read_lines(file: &str) -> Vec<String> {
         .collect();
     inputs
 }
+
+pub fn parse_vec_usize(inputs: &Vec<String>) -> Vec<usize> {
+    let vec = inputs[0]
+        .split(",")
+        .map(|f| f.parse::<usize>().unwrap())
+        .collect();
+
+    vec
+}
+
+#[cfg(test)]
+#[test]
+fn test_vec_usize_from_input() {
+    let inputs = read_lines("data/day_6_sample.txt");
+    let mut school = parse_vec_usize(&inputs);
+    assert_eq!(school, vec![3, 4, 3, 1, 2]);
+}
+
