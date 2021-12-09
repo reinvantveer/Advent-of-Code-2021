@@ -183,6 +183,7 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
         .iter()
         .filter(|input| {
             input.len() == 5
+                // Can't compare with `three`: it's already sorted, `input` is unsorted
                 && *input != three_candidates[0]
                 && !input.contains(&bottom_left)
         })
@@ -196,6 +197,7 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
         .iter()
         .filter(|input| {
             input.len() == 5
+                // Can't compare with `three`: it's already sorted, `input` is unsorted
                 && *input != three_candidates[0]
                 && *input != five_candidates[0]
         })
@@ -209,6 +211,7 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
         .iter()
         .filter(|input| {
             input.len() == 6
+                // Can't compare with `nine`: it's already sorted, `input` is unsorted
                 && *input != nine_candidates[0]
                 && input.contains(&one[0])
                 && input.contains(&one[1])
@@ -223,6 +226,7 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
         .iter()
         .filter(|input| {
             input.len() == 6
+                // Can't compare with `nine`: it's already sorted, `input` is unsorted
                 && *input != nine_candidates[0]
                 && *input != zero_candidates[0]
         })
@@ -240,15 +244,15 @@ pub(crate) fn decode_outputs(signal_set: &SegmentSignalSet, decoded_inputs: &Vec
 pub(crate) fn count_easy_segments(segment_sets: &Vec<SegmentPatternSet>) -> usize {
     let mut count = 0;
 
-        for segment_set in segment_sets {
-            let outputs = &segment_set.1;
-            for output in outputs {
-                match output.len() {
-                    2 | 3 | 4 | 7  => count += 1,
-                    _ => continue,
-                }
+    for segment_set in segment_sets {
+        let outputs = &segment_set.1;
+        for output in outputs {
+            match output.len() {
+                2 | 3 | 4 | 7  => count += 1,
+                _ => continue,
             }
         }
+    }
 
     count
 }
@@ -291,7 +295,6 @@ fn test_full_decode() {
     let first_set = segment_signal_sets[0].clone();
     let input_signals =  decode_inputs(&first_set);
 
-    ///
     //  dddd
     // e    a
     // e    a
