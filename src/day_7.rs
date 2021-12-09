@@ -6,6 +6,14 @@ use noisy_float::types::n64;
 use advent_of_code_2021::{parse_vec_usize, read_lines};
 
 pub(crate) fn run() {
+    let inputs = read_lines("data/day_7_input.txt");
+    let positions = parse_vec_usize(&inputs);
+    let alignment = cheapest_alignment(&positions);
+    println!("Alignment median: {}", &alignment);
+
+    let consumption = fuel_total_for_alignment(&positions, alignment);
+    println!("Total fuel consumption: {}", consumption);
+
 }
 
 pub(crate) fn fuel_total_for_alignment(positions: &Vec<usize>, align_position: usize) -> usize {
