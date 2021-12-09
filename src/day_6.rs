@@ -67,7 +67,7 @@ pub(crate) fn procreate_for_days(school: &mut Vec<usize>, days: usize) {
 }
 
 pub(crate) fn smart_procreate_for_days(school_bins: &mut Vec<usize>, days: usize) {
-    for day in 0..days {
+    for _ in 0..days {
         smart_procreate(school_bins);
     }
 }
