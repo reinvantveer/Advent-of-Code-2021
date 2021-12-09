@@ -118,7 +118,7 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
     // only four contains 4 segments
     let mut four = inputs
         .iter()
-        .filter(|s| s.len() == 3)
+        .filter(|s| s.len() == 4)
         .collect::<Vec<_>>()[0]
         .clone();
     four.sort();
@@ -140,7 +140,7 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
     eight.sort();
 
     // the three is the only five segment digit containing all segments of the seven
-    let mut three = inputs
+    let three_candidates = inputs
         .iter()
         .filter(|s| {
             s.len() == 5
@@ -148,47 +148,56 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
                 && s.contains(&seven[1])
                 && s.contains(&seven[2])
         })
-        .collect::<Vec<_>>()[0]
-        .clone();
+        .collect::<Vec<_>>();
+    assert_eq!(three_candidates.len(), 1);
+
+    let mut three = three_candidates[0].clone();
     three.sort();
 
     // nine is the only six-segment digit containing all the elements of the three
-    let mut nine = inputs
+    let nine_candidates = inputs
         .iter()
         .filter(|s| {
-            s.len() == 7
+            s.len() == 6
                 && s.contains(&three[0])
                 && s.contains(&three[1])
                 && s.contains(&three[2])
                 && s.contains(&three[3])
                 && s.contains(&three[4])
         })
-        .collect::<Vec<_>>()[0]
-        .clone();
+        .collect::<Vec<_>>();
+    assert_eq!(nine_candidates.len(), 1);
+    let mut nine= nine_candidates[0].clone();
     nine.sort();
 
     // The bottom left segment is the only one present in the eight but not the nine
-    let bottom_left = eight
+    let bottom_left_candidates = eight
         .iter()
         .filter(|num| !nine.contains(num))
-        .collect::<Vec<_>>()[0]
-        .clone();
+        .collect::<Vec<_>>();
+    assert_eq!(bottom_left_candidates.len(), 1);
+    let bottom_left = bottom_left_candidates[0].clone();
 
-    // five is the only five-segment digit having no bottom left segment
-    let mut five = inputs
+    // five is the only five-segment digit not being a three, having no bottom left segment
+    let mut five_candidates = inputs
         .iter()
         .filter(|input| {
-            input.len() == 5 && !input.contains(&bottom_left)
+            let mut input_sorted = &mut *input.clone();
+            input_sorted.sort();
+            input.len() == 5 && !input_sorted.eq(&mut &three)
         })
-        .collect::<Vec<_>>()[0]
-        .clone();
+        .collect::<Vec<_>>();
+    assert_eq!(five_candidates.len(), 1);
+    let mut five= five_candidates[0].clone();
     five.sort();
 
     // two is the only five-segment digit that is not a three and not a five
     let mut two = inputs
         .iter()
         .filter(|input| {
-            *input != &three && *input != &five
+            input.len() == 5
+                && **input != three
+                && **input != five
         })
         .collect::<Vec<_>>()[0]
         .clone();
@@ -198,7 +207,10 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
     let mut zero = inputs
         .iter()
         .filter(|input| {
-            *input != &nine && input.contains(&one[0]) && input.contains(&one[1])
+            input.len() == 6
+                && *input != &nine
+                && input.contains(&one[0])
+                && input.contains(&one[1])
         })
         .collect::<Vec<_>>()[0]
         .clone();
@@ -214,7 +226,7 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
         .clone();
     six.sort();
 
-    vec![one, two, three, four, five, six, seven, eight, nine]
+    vec![zero, one, two, three, four, five, six, seven, eight, nine]
 }
 
 pub(crate) fn decode_outputs(signal_set: &SegmentSignalSet, decoded_inputs: &Vec<Signal>) -> usize {
@@ -274,5 +286,34 @@ fn test_full_decode() {
 
     let first_set = segment_signal_sets[0].clone();
     let input_signals =  decode_inputs(&first_set);
-    assert_eq!(display_number, 5353);
+
+    let top_right = 0;
+    let bottom_right = 1;
+    let bottom = 2;
+    let top = 3;  // certain
+    let top_left = 4;
+    let middle = 5;
+    let bottom_left = 6;
+
+
+    // one is two segments
+    assert_eq!(input_signals[1], vec![top_right, bottom_right, ]);
+    // four is four segments
+    assert_eq!(input_signals[4], vec![top_right, bottom_right, top_left, middle]);
+    // seven is three segments
+    assert_eq!(input_signals[7], vec![top_right, bottom_right, top]);
+    // eight is seven segments
+    assert_eq!(input_signals[8], vec![bottom_right, top_right, bottom, top, top_left, middle, bottom_left]);
+    // three is five segments
+    assert_eq!(input_signals[3], vec![bottom_right, top_right, bottom, top, middle]);
+    // nine is six segments
+    assert_eq!(input_signals[9], vec![bottom_right, top_right, bottom, top, top_left, middle]);
+    // five is five segments
+    assert_eq!(input_signals[5], vec![bottom_right, bottom, top, top_left, middle]);
+    // zero is six segments
+    assert_eq!(input_signals[0], vec![bottom_right, top_right, bottom, top, top_left, middle]);
+    // two is five segments
+    assert_eq!(input_signals[2], vec![top_right, bottom, top, top_left, middle]);
+    // six is six segments
+    assert_eq!(input_signals[6], vec![bottom_right, top_right, top_left, middle]);
 }
