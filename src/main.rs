@@ -32,7 +32,7 @@ pub fn main() {
         "5" => { day_5::run() },
         "6" => { day_6::run() },
         "7" => { day_7::run() },
-        "8" => { day_7::run() },
+        "8" => { day_8::run() },
         _ => { todo!("This day isn't implemented (yet)") },
     };
 }
