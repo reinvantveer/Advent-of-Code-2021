@@ -7,3 +7,6 @@ edition = "2018"
 
 [dependencies]
 clap = "2.34.0"
+ndarray = "0.15.4"
+ndarray-stats = "0.5.0"
+noisy_float = "0.2.0"
