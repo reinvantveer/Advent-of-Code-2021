@@ -183,7 +183,7 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
     let bottom_left = bottom_left_candidates[0].clone();
 
     // five is the only five-segment digit not being a three, having no bottom left segment
-    let mut five_candidates = inputs
+    let five_candidates = inputs
         .iter()
         .filter(|input| {
             input.len() == 5
