@@ -364,8 +364,9 @@ fn test_output_decode() {
 
     let first_set = segment_signal_sets[0].clone();
     let input_signals =  decode_inputs(&first_set);
-    let display = decode_outputs(&input_signals, &first_set.1);
+    let display = decode_display(&input_signals, &first_set.1);
     assert_eq!(display, 5353)
+}
 
 #[test]
 fn test_output_sum() {
