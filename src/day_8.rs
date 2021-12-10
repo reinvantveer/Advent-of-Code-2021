@@ -237,8 +237,21 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
     vec![zero, one, two, three, four, five, six, seven, eight, nine]
 }
 
-pub(crate) fn decode_outputs(signal_set: &SegmentSignalSet, decoded_inputs: &Vec<Signal>) -> usize {
-    0
+pub(crate) fn decode_outputs(decoded_inputs: &Vec<Signal>, encoded_outputs: &Vec<Signal>) -> usize {
+    let mut display_number = 0;
+
+    let mut smallest_digit_first = encoded_outputs.clone();
+    smallest_digit_first.reverse();
+
+    for (pos, signal) in smallest_digit_first.iter().enumerate() {
+        let mut sorted_signal = signal.clone();
+        sorted_signal.sort();
+
+        let digit = decoded_inputs.iter().position(|s| s == &sorted_signal).unwrap();
+        display_number += digit * 10_usize.pow(pos as u32);
+    }
+
+    display_number
 }
 
 pub(crate) fn count_easy_segments(segment_sets: &Vec<SegmentPatternSet>) -> usize {
@@ -330,4 +343,17 @@ fn test_full_decode() {
     assert_eq!(input_signals[6], vec![bottom_right, bottom, top, top_left, middle, bottom_left]);
     // two is five segments
     assert_eq!(input_signals[2], vec![top_right, bottom, top, middle, bottom_left]);
+}
+
+#[test]
+fn test_output_decode() {
+    let inputs = vec!["acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf".to_string()];
+    let segment_sets = parse_input_output_signals(&inputs);
+    let segment_signal_sets = parse_full_signals(&segment_sets);
+
+    let first_set = segment_signal_sets[0].clone();
+    let input_signals =  decode_inputs(&first_set);
+    let display = decode_outputs(&input_signals, &first_set.1);
+    assert_eq!(display, 5353)
+
 }
