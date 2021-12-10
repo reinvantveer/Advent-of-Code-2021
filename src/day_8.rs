@@ -6,6 +6,10 @@ pub(crate) fn run() {
     let segment_sets = parse_input_output_signals(&inputs);
     let easy_count = count_easy_segments(&segment_sets);
     println!("The total of easy digits is {}", easy_count);
+
+    let full_signals = parse_full_signals(&segment_sets);
+    let total = sum_outputs(&full_signals);
+    println!("The total of the display numbers is {}", total);
 }
 
 type SegmentPatternSet = (Vec<String>, Vec<String>);
