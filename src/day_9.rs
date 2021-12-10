@@ -91,8 +91,11 @@ fn test_parse_dem() {
 fn test_local_minima() {
     let inputs = read_lines("data/day_9_sample.txt");
     let dem = parse_dem(&inputs);
-    let risk_levels = collect_local_minima(&dem);
-    assert_eq!(risk_levels, vec![2, 1, 6, 6]);
-    let risk_level = risk_levels.iter().sum::<usize>();
+    let minima = collect_local_minima(&dem);
+
+    assert_eq!(minima.len(), 4);
+    let risk_level = minima.iter()
+        .map(|m| m.risk )
+        .sum::<usize>();
     assert_eq!(risk_level, 15);
 }
