@@ -1,7 +1,14 @@
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
-
+    let inputs = read_lines("data/day_9_input.txt");
+    let dem = parse_dem(&inputs);
+    let risk_levels = collect_local_minima(&dem);
+    let risk_sum = risk_levels
+        .iter()
+        .map(|m| m.risk )
+        .sum::<usize>();
+    println!("Risk levels total: {}", risk_sum);
 }
 
 // A digital elevation model (DEM)
