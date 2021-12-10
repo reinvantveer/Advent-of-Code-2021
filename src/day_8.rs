@@ -241,7 +241,7 @@ pub(crate) fn decode_inputs(signal_set: &SegmentSignalSet) -> Vec<Signal> {
     vec![zero, one, two, three, four, five, six, seven, eight, nine]
 }
 
-pub(crate) fn decode_outputs(decoded_inputs: &Vec<Signal>, encoded_outputs: &Vec<Signal>) -> usize {
+pub(crate) fn decode_display(decoded_inputs: &Vec<Signal>, encoded_outputs: &Vec<Signal>) -> usize {
     let mut display_number = 0;
 
     let mut smallest_digit_first = encoded_outputs.clone();
