@@ -6,6 +6,7 @@ mod day_5;
 mod day_6;
 mod day_7;
 mod day_8;
+mod day_9;
 
 use clap::{App, Arg};
 
@@ -33,6 +34,7 @@ pub fn main() {
         "6" => { day_6::run() },
         "7" => { day_7::run() },
         "8" => { day_8::run() },
+        "9" => { day_9::run() },
         _ => { todo!("This day isn't implemented (yet)") },
     };
 }
