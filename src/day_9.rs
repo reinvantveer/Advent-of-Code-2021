@@ -28,7 +28,15 @@ pub(crate) fn parse_dem(inputs: &Vec<String>) -> DEM {
     dem
 }
 
-fn collect_local_minima(dem: &DEM) -> Vec<usize> {
+#[derive(Clone, PartialEq)]
+pub(crate) struct DEMPoint {
+    row: usize,
+    column: usize,
+    // Risk level is the height + 1
+    risk: usize,
+}
+
+fn collect_local_minima(dem: &DEM) -> Vec<DEMPoint> {
     let mut local_minima = Vec::new();
 
     for (row_idx, row) in dem.iter().enumerate() {
@@ -54,7 +62,11 @@ fn collect_local_minima(dem: &DEM) -> Vec<usize> {
                 if entry >= &entry_to_right { continue }
             }
 
-            local_minima.push(*entry + 1);
+            local_minima.push(DEMPoint {
+                row: row_idx,
+                column: col_idx,
+                risk: *entry + 1
+            });
         }
     }
 
