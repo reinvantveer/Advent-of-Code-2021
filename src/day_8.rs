@@ -270,6 +270,17 @@ pub(crate) fn count_easy_segments(segment_sets: &Vec<SegmentPatternSet>) -> usiz
     count
 }
 
+pub(crate) fn sum_outputs(segment_signal_sets: &Vec<SegmentSignalSet>) -> usize {
+    let mut sum = 0;
+
+    for set in segment_signal_sets {
+        let decoded_inputs = decode_inputs(set);
+        let display = decode_display(&decoded_inputs, &set.1);
+        sum += display
+    }
+    sum
+}
+
 #[cfg(test)]
 #[test]
 fn test_parse_segments() {
@@ -356,4 +367,12 @@ fn test_output_decode() {
     let display = decode_outputs(&input_signals, &first_set.1);
     assert_eq!(display, 5353)
 
+#[test]
+fn test_output_sum() {
+    let inputs = read_lines("data/day_8_sample.txt");
+    let segment_sets = parse_input_output_signals(&inputs);
+    let segment_signal_sets = parse_full_signals(&segment_sets);
+
+    let sum = sum_outputs(&segment_signal_sets);
+    assert_eq!(sum, 61229)
 }
