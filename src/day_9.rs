@@ -93,24 +93,39 @@ pub(crate) fn find_three_largest_basins(minima: &Vec<DEMPoint>, dem: &DEM) -> Ve
 
 pub(crate) fn graph_from_dem(dem: &DEM) -> DiGraph<DEMPoint, ()> {
     let mut dem_graph= DiGraph::new();
+    let starting_point = DEMPoint {
+        row: 0,
+        column: 0,
+        risk: dem[0][0] + 1
+    };
+    dem_graph.add_node(starting_point);
 
     for (row_idx, row) in dem.iter().enumerate() {
         for (col_idx, entry) in row.iter().enumerate() {
-            let node_at_point = dem_graph.add_node(DEMPoint {
-                row: 0,
-                column: 0,
-                risk: dem[0][0] + 1
-            });
+            let dem_point_at_point = DEMPoint { row: row_idx, column: col_idx, risk: dem[row_idx][col_idx] + 1};
+
+            let node_at_point = find_node(&dem_graph, &dem_point_at_point)
+                .expect(&format!(
+                    "Didn't find node at row {}, column {}, risk {}",
+                    row_idx, col_idx, dem[row_idx][col_idx] + 1
+                ));
 
             let row_idx_below = row_idx + 1;
 
             // We only have to compare below and to the right in order to construct the graph
             if let Some(row_below) = dem.get(row_idx_below) {
-                let node_below_idx = dem_graph.add_node(DEMPoint{
+                let point_below = DEMPoint {
                     row: row_idx_below,
                     column: col_idx,
-                    risk: dem[row_idx_below][col_idx]
-                });
+                    risk: dem[row_idx_below][col_idx] + 1
+                };
+
+                let mut node_below_idx;
+                if let Some(nb) = find_node(&dem_graph, &point_below) {
+                    node_below_idx = nb;
+                } else {
+                    node_below_idx = dem_graph.add_node(point_below);
+                }
 
                 if row_below[col_idx] > *entry {
                     dem_graph.add_edge(node_at_point, node_below_idx, ());
@@ -119,16 +134,25 @@ pub(crate) fn graph_from_dem(dem: &DEM) -> DiGraph<DEMPoint, ()> {
                 }
             }
 
-            if let Some(col_to_right) = row.get(col_idx + 1) {
-                let node_to_right = dem_graph.add_node(DEMPoint{
+            let col_to_right = col_idx + 1;
+            if let Some(_) = row.get(col_to_right) {
+                let point_to_right = DEMPoint {
                     row: row_idx,
-                    column: *col_to_right,
-                    risk: dem[row_idx][*col_to_right]
-                });
+                    column: col_to_right,
+                    risk: dem[row_idx][col_to_right] + 1
+                };
 
-                if row[*col_to_right] > *entry {
+                let mut node_to_right;
+
+                if let Some(ntr) = find_node(&dem_graph, &point_to_right){
+                    node_to_right = ntr;
+                } else {
+                    node_to_right = dem_graph.add_node(point_to_right);
+                }
+
+                if row[col_to_right] > *entry {
                     dem_graph.add_edge(node_at_point, node_to_right, ());
-                } else if *entry > row[*col_to_right] {
+                } else if *entry > row[col_to_right] {
                     dem_graph.add_edge(node_to_right, node_at_point, ());
                 }
             }
@@ -136,6 +160,17 @@ pub(crate) fn graph_from_dem(dem: &DEM) -> DiGraph<DEMPoint, ()> {
     }
 
     dem_graph
+}
+
+pub(crate) fn find_node<T>(
+    dem_graph: &DiGraph<T, ()>,
+    needle: &T
+) -> Option<NodeIndex>
+where T: PartialEq
+{
+    dem_graph
+        .node_indices()
+        .find(|idx| dem_graph[*idx] == *needle)
 }
 
 pub(crate) fn expand_basin(minimum: &DEMPoint, dem_graph: &DiGraph<DEMPoint, ()>) -> Basin {
@@ -186,7 +221,13 @@ fn test_graph_from_den() {
     let dem = parse_dem(&inputs);
     let dem_graph = graph_from_dem(&dem);
 
-    assert_eq!(dem_graph.node_indices().len(), 5)
+    let needle = &DEMPoint { row: 0, column: 0, risk: 3 };
+    let found = find_node(&dem_graph, needle).unwrap();
+    assert_eq!(found.index(), 0);
+
+    let dem_rows = dem.len();
+    let dem_cols = dem[0].len();
+    assert_eq!(dem_graph.node_indices().len(), dem_rows * dem_cols)
 }
 
 #[test]
