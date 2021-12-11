@@ -120,7 +120,7 @@ pub(crate) fn graph_from_dem(dem: &DEM) -> DiGraph<DEMPoint, ()> {
                     risk: dem[row_idx_below][col_idx] + 1
                 };
 
-                let mut node_below_idx;
+                let node_below_idx;
                 if let Some(nb) = find_node(&dem_graph, &point_below) {
                     node_below_idx = nb;
                 } else {
@@ -142,7 +142,7 @@ pub(crate) fn graph_from_dem(dem: &DEM) -> DiGraph<DEMPoint, ()> {
                     risk: dem[row_idx][col_to_right] + 1
                 };
 
-                let mut node_to_right;
+                let node_to_right;
 
                 if let Some(ntr) = find_node(&dem_graph, &point_to_right){
                     node_to_right = ntr;
