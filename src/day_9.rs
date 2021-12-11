@@ -1,4 +1,5 @@
-use petgraph::{Directed, Graph};
+use petgraph::algo::dijkstra;
+use petgraph::graph::{DiGraph, NodeIndex};
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
@@ -78,30 +79,58 @@ type Basin = Vec<DEMPoint>;
 
 pub(crate) fn find_three_largest_basins(minima: &Vec<DEMPoint>, dem: &DEM) -> Vec<Basin> {
     let mut basins = Vec::new();
+    let dem_graph = graph_from_dem(&dem);
 
     for minimum in minima {
-        let basin = &mut vec![minimum.clone()];
-        basins.push(expand_basin(minimum, ).to_owned());
+        basins.push(expand_basin(minimum, &dem_graph).to_owned());
     }
 
     basins.sort_by(|a, b| b.len().cmp(&a.len()));
     let three_largest_basins = basins[0..3].to_vec();
+
     three_largest_basins
 }
 
-pub(crate) fn graph_from_dem(dem: &DEM) -> Graph<DEMPoint, Directed> {
-    let mut dem_graph= Graph::new();
-    dem_graph.add_node(DEMPoint {row: 0, column: 0, risk: dem[0][0] + 1});
+pub(crate) fn graph_from_dem(dem: &DEM) -> DiGraph<DEMPoint, ()> {
+    let mut dem_graph= DiGraph::new();
 
     for (row_idx, row) in dem.iter().enumerate() {
         for (col_idx, entry) in row.iter().enumerate() {
+            let node_at_point = dem_graph.add_node(DEMPoint {
+                row: 0,
+                column: 0,
+                risk: dem[0][0] + 1
+            });
+
+            let row_idx_below = row_idx + 1;
+
             // We only have to compare below and to the right in order to construct the graph
-            if let Some(row_below) = dem.get(row_idx + 1) {
-                if row_below[col_idx]
+            if let Some(row_below) = dem.get(row_idx_below) {
+                let node_below_idx = dem_graph.add_node(DEMPoint{
+                    row: row_idx_below,
+                    column: col_idx,
+                    risk: dem[row_idx_below][col_idx]
+                });
+
+                if row_below[col_idx] > *entry {
+                    dem_graph.add_edge(node_at_point, node_below_idx, ());
+                } else if *entry > row_below[col_idx] {
+                    dem_graph.add_edge(node_below_idx, node_at_point, ());
+                }
             }
 
             if let Some(col_to_right) = row.get(col_idx + 1) {
+                let node_to_right = dem_graph.add_node(DEMPoint{
+                    row: row_idx,
+                    column: *col_to_right,
+                    risk: dem[row_idx][*col_to_right]
+                });
 
+                if row[*col_to_right] > *entry {
+                    dem_graph.add_edge(node_at_point, node_to_right, ());
+                } else if *entry > row[*col_to_right] {
+                    dem_graph.add_edge(node_to_right, node_at_point, ());
+                }
             }
         }
     }
@@ -109,40 +138,18 @@ pub(crate) fn graph_from_dem(dem: &DEM) -> Graph<DEMPoint, Directed> {
     dem_graph
 }
 
-pub(crate) fn expand_basin(minimum: &DEMPoint, dem_graph: &Graph<N, E>) -> Basin {
-    let mut extra_minima = Vec::new();
-    let den_width = dem[0].len();
+pub(crate) fn expand_basin(minimum: &DEMPoint, dem_graph: &DiGraph<DEMPoint, ()>) -> Basin {
+    let basin = Vec::new();
+    let minimum_node_idx = dem_graph
+        .node_indices()
+        .find(|idx| dem_graph[*idx] == *minimum)
+        .unwrap();
 
-    for minimum in &*basin {
-        // Check all directions if there is a point that we can add
+    let connected_node_ids = dijkstra(dem_graph, minimum_node_idx, None, |_| 1)
+        .iter()
+        .map(|(node_idx, distance)| node_idx.clone() )
+        .collect::<Vec<NodeIndex>>();
 
-        // Above
-        if minimum.row > 0 {
-            let row_above = minimum.row - 1;
-            let entry_above = dem[row_above][minimum.column];
-            let new_minimum = DEMPoint {row: row_above, column: minimum.column, risk: entry_above + 1 };
-
-            // Check only if the new minimum isn't included already in the basin or what has been
-            // collected already into the extra minima
-            if !basin.contains(&new_minimum) && !extra_minima.contains(&new_minimum) {
-                let mut is_lower_than_surrounding = true;
-                // Check entry above for existence. Is it lower or equal? Then it is not to be included in the basin.
-                if row_above > 0 {
-                    if dem[row_above - 1][minimum.column] <= entry_above { is_lower_than_surrounding = false }
-                }
-                // Check entry to the left. Is it lower or equal? Then it is not to be included in the basin.
-                if minimum.column > 0 {
-                    if dem[row_above][minimum.column - 1] <= entry_above { is_lower_than_surrounding = false }
-                }
-                // Check entry to the left. Is it lower or equal? Then it is not to be included in the basin.
-                if minimum.column < den_width - 1 {
-                    if dem[row_above][minimum.column + 1] <= entry_above { is_lower_than_surrounding = false }
-                }
-            }
-        }
-    }
-
-    basin.extend(extra_minima);
     basin
 }
 
@@ -179,7 +186,7 @@ fn test_graph_from_den() {
     let dem = parse_dem(&inputs);
     let dem_graph = graph_from_dem(&dem);
 
-    assert_eq!()
+    assert_eq!(dem_graph.node_indices().len(), 5)
 }
 
 #[test]
