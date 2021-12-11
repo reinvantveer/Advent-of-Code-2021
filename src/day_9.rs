@@ -1,3 +1,4 @@
+use std::ops::Index;
 use petgraph::algo::dijkstra;
 use petgraph::graph::{DiGraph, NodeIndex};
 use advent_of_code_2021::read_lines;
@@ -182,10 +183,10 @@ pub(crate) fn expand_basin(minimum: &DEMPoint, dem_graph: &DiGraph<DEMPoint, ()>
 
     let connected_node_ids = dijkstra(dem_graph, minimum_node_idx, None, |_| 1)
         .iter()
-        .map(|(node_idx, distance)| node_idx.clone() )
-        .collect::<Vec<NodeIndex>>();
+        .map(|(node_idx, _)| dem_graph.index(node_idx.clone()).clone() )
+        .collect::<Vec<DEMPoint>>();
 
-    basin
+    connected_node_ids
 }
 
 #[cfg(test)]
