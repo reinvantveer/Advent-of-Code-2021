@@ -175,7 +175,6 @@ where T: PartialEq
 }
 
 pub(crate) fn expand_basin(minimum: &DEMPoint, dem_graph: &DiGraph<DEMPoint, ()>) -> Basin {
-    let basin = Vec::new();
     let minimum_node_idx = dem_graph
         .node_indices()
         .find(|idx| dem_graph[*idx] == *minimum)
