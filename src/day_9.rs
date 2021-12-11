@@ -184,72 +184,73 @@ pub(crate) fn expand_basin(minimum: &DEMPoint, dem_graph: &DiGraph<DEMPoint, ()>
 
     let basin = connected_nodes
         .iter()
-        .filter(|dem_point| {
-            let mut is_surrounded_at_four_sides_by_connected_node_ids = true;
-
-            let row_idx = dem_point.row;
-            let col_idx = dem_point.column;
-
-            if row_idx > 0 {
-                let row_idx_above = row_idx - 1;
-                let point_above = DEMPoint {
-                    row: row_idx_above,
-                    column: col_idx,
-                    risk: dem[row_idx_above][col_idx] + 1
-                };
-
-                if !connected_nodes.contains(&point_above) {
-                    is_surrounded_at_four_sides_by_connected_node_ids = false;
-                }
-
-            }
-
-            let row_idx_below = row_idx + 1;
-            if let Some(_) = dem.get(row_idx_below){
-                let point_below = DEMPoint {
-                    row: row_idx_below,
-                    column: col_idx,
-                    risk: dem[row_idx_below][col_idx] + 1
-                };
-
-                if !connected_nodes.contains(&point_below) {
-                    is_surrounded_at_four_sides_by_connected_node_ids = false;
-                }
-            }
-
-            if col_idx > 0 {
-                let col_idx_to_left = col_idx - 1;
-
-                let point_to_left = DEMPoint{
-                    row: row_idx,
-                    column: col_idx_to_left,
-                    risk: dem[row_idx][col_idx_to_left] + 1
-                };
-
-                if !connected_nodes.contains(&point_to_left) {
-                    is_surrounded_at_four_sides_by_connected_node_ids = false;
-                }
-            }
-
-            let col_idx_to_right = col_idx + 1;
-            if let Some(_) = dem[row_idx].get(col_idx_to_right) {
-                let point_to_right = DEMPoint{
-                    row: row_idx,
-                    column: col_idx_to_right,
-                    risk: dem[row_idx][col_idx_to_right] + 1
-                };
-
-                if !connected_nodes.contains(&point_to_right) {
-                    is_surrounded_at_four_sides_by_connected_node_ids = false;
-                }
-            }
-
-            is_surrounded_at_four_sides_by_connected_node_ids
-        })
+        .filter(|dem_point| is_surrounded(dem_point, connected_nodes, dem) )
         .map(|dem_point| dem_point.clone() )
         .collect();
 
     basin
+}
+
+pub(crate) fn is_surrounded(dem_point: &&DEMPoint, connected_nodes: Vec<DEMPoint>, dem: &DEM) -> bool {
+    let mut is_surrounded_at_four_sides_by_connected_node_ids = true;
+
+    let row_idx = dem_point.row;
+    let col_idx = dem_point.column;
+
+    if row_idx > 0 {
+        let row_idx_above = row_idx - 1;
+        let point_above = DEMPoint {
+            row: row_idx_above,
+            column: col_idx,
+            risk: dem[row_idx_above][col_idx] + 1
+        };
+
+        if !connected_nodes.contains(&point_above) {
+            is_surrounded_at_four_sides_by_connected_node_ids = false;
+        }
+    }
+
+    let row_idx_below = row_idx + 1;
+    if let Some(_) = dem.get(row_idx_below) {
+        let point_below = DEMPoint {
+            row: row_idx_below,
+            column: col_idx,
+            risk: dem[row_idx_below][col_idx] + 1
+        };
+
+        if !connected_nodes.contains(&point_below) {
+            is_surrounded_at_four_sides_by_connected_node_ids = false;
+        }
+    }
+
+    if col_idx > 0 {
+        let col_idx_to_left = col_idx - 1;
+
+        let point_to_left = DEMPoint {
+            row: row_idx,
+            column: col_idx_to_left,
+            risk: dem[row_idx][col_idx_to_left] + 1
+        };
+
+        if !connected_nodes.contains(&point_to_left) {
+            is_surrounded_at_four_sides_by_connected_node_ids = false;
+        }
+    }
+
+    let col_idx_to_right = col_idx + 1;
+    if let Some(_) = dem[row_idx].get(col_idx_to_right) {
+        let point_to_right = DEMPoint {
+            row: row_idx,
+            column: col_idx_to_right,
+            risk: dem[row_idx][col_idx_to_right] + 1
+        };
+
+        if !connected_nodes.contains(&point_to_right) {
+            is_surrounded_at_four_sides_by_connected_node_ids = false;
+        }
+    }
+
+    is_surrounded_at_four_sides_by_connected_node_ids
 }
 
 #[cfg(test)]
