@@ -83,7 +83,7 @@ pub(crate) fn find_three_largest_basins(minima: &Vec<DEMPoint>, dem: &DEM) -> Ve
     let dem_graph = graph_from_dem(&dem);
 
     for minimum in minima {
-        basins.push(expand_basin(minimum, &dem_graph).to_owned());
+        basins.push(expand_basin(minimum, &dem_graph, &dem).to_owned());
     }
 
     basins.sort_by(|a, b| b.len().cmp(&a.len()));
@@ -174,18 +174,82 @@ where T: PartialEq
         .find(|idx| dem_graph[*idx] == *needle)
 }
 
-pub(crate) fn expand_basin(minimum: &DEMPoint, dem_graph: &DiGraph<DEMPoint, ()>) -> Basin {
-    let minimum_node_idx = dem_graph
-        .node_indices()
-        .find(|idx| dem_graph[*idx] == *minimum)
-        .unwrap();
+pub(crate) fn expand_basin(minimum: &DEMPoint, dem_graph: &DiGraph<DEMPoint, ()>, dem: &DEM) -> Basin {
+    let minimum_node_idx = find_node(&dem_graph, minimum).unwrap();
 
-    let connected_node_ids = dijkstra(dem_graph, minimum_node_idx, None, |_| 1)
+    let connected_nodes = dijkstra(dem_graph, minimum_node_idx, None, |_| 1)
         .iter()
         .map(|(node_idx, _)| dem_graph.index(node_idx.clone()).clone() )
         .collect::<Vec<DEMPoint>>();
 
-    connected_node_ids
+    let basin = connected_nodes
+        .iter()
+        .filter(|dem_point| {
+            let mut is_surrounded_at_four_sides_by_connected_node_ids = true;
+
+            let row_idx = dem_point.row;
+            let col_idx = dem_point.column;
+
+            if row_idx > 0 {
+                let row_idx_above = row_idx - 1;
+                let point_above = DEMPoint {
+                    row: row_idx_above,
+                    column: col_idx,
+                    risk: dem[row_idx_above][col_idx] + 1
+                };
+
+                if !connected_nodes.contains(&point_above) {
+                    is_surrounded_at_four_sides_by_connected_node_ids = false;
+                }
+
+            }
+
+            let row_idx_below = row_idx + 1;
+            if let Some(_) = dem.get(row_idx_below){
+                let point_below = DEMPoint {
+                    row: row_idx_below,
+                    column: col_idx,
+                    risk: dem[row_idx_below][col_idx] + 1
+                };
+
+                if !connected_nodes.contains(&point_below) {
+                    is_surrounded_at_four_sides_by_connected_node_ids = false;
+                }
+            }
+
+            if col_idx > 0 {
+                let col_idx_to_left = col_idx - 1;
+
+                let point_to_left = DEMPoint{
+                    row: row_idx,
+                    column: col_idx_to_left,
+                    risk: dem[row_idx][col_idx_to_left] + 1
+                };
+
+                if !connected_nodes.contains(&point_to_left) {
+                    is_surrounded_at_four_sides_by_connected_node_ids = false;
+                }
+            }
+
+            let col_idx_to_right = col_idx + 1;
+            if let Some(_) = dem[row_idx].get(col_idx_to_right) {
+                let point_to_right = DEMPoint{
+                    row: row_idx,
+                    column: col_idx_to_right,
+                    risk: dem[row_idx][col_idx_to_right] + 1
+                };
+
+                if !connected_nodes.contains(&point_to_right) {
+                    is_surrounded_at_four_sides_by_connected_node_ids = false;
+                }
+            }
+
+            is_surrounded_at_four_sides_by_connected_node_ids
+        })
+        .map(|dem_point| dem_point.clone() )
+        .collect();
+
+    basin
 }
 
 #[cfg(test)]
