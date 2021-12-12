@@ -25,12 +25,17 @@ pub(crate) enum Syntactical {
 }
 
 pub(crate) fn syntax_check(line: &Vec<String>) -> Syntactical {
-    let closing_tokens = "}])"
+    let closing_tokens = "}])>"
         .chars()
         .map(|c| c.to_string())
         .collect::<Vec<_>>();
 
-    let matching_tokens = vec!["[]".to_string(), "{}".to_string(), "()".to_string()];
+    let matching_tokens = vec![
+        "[]".to_string(),
+        "{}".to_string(),
+        "()".to_string(),
+        "<>".to_string(),
+    ];
 
     let mut mutable_line = line.join("");
 
