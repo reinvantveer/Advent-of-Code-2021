@@ -5,8 +5,11 @@ use crate::day_10::Syntactical::{Correct, Incomplete, Incorrect};
 pub(crate) fn run() {
     let inputs = read_lines("data/day_10_input.txt");
     let token_lines = read_tokens(&inputs);
-    let score = score_from_incorrect_tokens(&token_lines);
-    println!("Total score for incorrect tokens: {}", score);
+    let incorrect_score = score_from_incorrect_tokens(&token_lines);
+    println!("Total score for incorrect tokens: {}", incorrect_score);
+
+    let incomplete_score = score_from_incomplete_lines(&token_lines);
+    println!("Score for incomplete autocomplete: {}", incomplete_score);
 }
 
 pub(crate) fn read_tokens(inputs: &Vec<String>) -> Vec<Vec<String>> {
