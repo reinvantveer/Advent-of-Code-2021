@@ -4,7 +4,9 @@ pub(crate) fn run() {
 
 }
 
-pub(crate) fn octopi_from_input(input: &Vec<String>) -> Vec<Vec<usize>> {
+type OctopusGrid = Vec<Vec<usize>>;
+
+pub(crate) fn octopi_from_input(input: &Vec<String>) -> OctopusGrid {
     input
         .iter()
         .map(|line| {
@@ -15,12 +17,26 @@ pub(crate) fn octopi_from_input(input: &Vec<String>) -> Vec<Vec<usize>> {
         .collect()
 }
 
-pub(crate) fn simple_energy_increase(octopi: &mut Vec<Vec<usize>>) {
+pub(crate) fn simple_energy_increase(octopi: &mut OctopusGrid) {
     for octopus_row in octopi {
         for octopus in octopus_row {
             *octopus += 1;
         }
     }
+}
+
+pub(crate) fn flash_octopi(octopi: &mut OctopusGrid) -> usize {
+    let mut flashes = 0;
+
+    for octopus_row in octopi {
+        for octopus in octopus_row {
+            if *octopus > 9 {
+                flashes += 1;
+            }
+        }
+    }
+
+    flashes
 }
 
 #[cfg(test)]
@@ -48,14 +64,11 @@ fn test_increase() {
 fn test_flash() {
     let input = read_lines("data/day_11_sample.txt");
     let mut octopi = octopi_from_input(&input);
-    simple_energy_increase(&mut octopi);
 
-    let mut flashes;
     // Once - nothing happens yet
-    flashes = flash_octopi(&mut octopi);
-    assert_eq!(flashes, 0);
+    simple_energy_increase(&mut octopi);
+    assert_eq!(flash_octopi(&mut octopi), 0);
     // Twice - now
-    flashes = flash_octopi(&mut octopi);
-    assert_eq!(flashes, 35)
-
+    simple_energy_increase(&mut octopi);
+    assert_eq!(flash_octopi(&mut octopi), 35)
 }
