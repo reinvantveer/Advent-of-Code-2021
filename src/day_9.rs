@@ -6,12 +6,19 @@ use advent_of_code_2021::read_lines;
 pub(crate) fn run() {
     let inputs = read_lines("data/day_9_input.txt");
     let dem = parse_dem(&inputs);
-    let risk_levels = collect_local_minima(&dem);
-    let risk_sum = risk_levels
+    let local_minima = collect_local_minima(&dem);
+    let risk_sum = local_minima
         .iter()
         .map(|m| m.risk )
         .sum::<usize>();
     println!("Risk levels total: {}", risk_sum);
+
+    let three_largest_basins = find_three_largest_basins(&local_minima, &dem);
+    let first_size = three_largest_basins[0].len();
+    let second_size = three_largest_basins[1].len();
+    let third_size = three_largest_basins[2].len();
+    println!("Size of three largest basins: {}, {}, {}", first_size, second_size, third_size);
+    println!("These multiplied is {}", first_size * second_size * third_size);
 }
 
 // A digital elevation model (DEM)
