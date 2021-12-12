@@ -25,67 +25,42 @@ pub(crate) enum Syntactical {
 }
 
 pub(crate) fn syntax_check(line: &Vec<String>) -> Syntactical {
-    let opening_tokens = "{[("
-        .chars()
-        .map(|c| c.to_string())
-        .collect::<Vec<_>>();
-
     let closing_tokens = "}])"
         .chars()
         .map(|c| c.to_string())
         .collect::<Vec<_>>();
 
-    let mut cursor = 0_usize;
+    let matching_tokens = vec!["[]".to_string(), "{}".to_string(), "()".to_string()];
 
-    for (idx, token) in line.iter().enumerate() {
-        // If we already checked a particular section: continue to the cursor position
-        if idx <= cursor { continue; }
+    let mut mutable_line = line.join("");
 
-        // Look for the matching closing token
-        if opening_tokens.contains(token) {
-            let opening_token = token;
-            let opening_token_idx = opening_tokens
-                .iter()
-                .position(|t| t == token)
-                .unwrap();
-            let closing_token = closing_tokens[opening_token_idx].clone();
-
-            // Find all closing positions
-            let closing_idxs = line
-                .iter()
-                .enumerate()
-                .filter(|(_idx, c)| c == &&closing_token)
-                .map(|(idx, _c)| idx)
-                .collect::<Vec<_>>();
-
-            if closing_idxs.len() > 0 {
-                // Find the closing token, if any
-                for closing_idx in closing_idxs {
-                    if line[idx..closing_idx].contains(&opening_token) {
-                        // If in the space between the opening and closing token contains another
-                        // opening token, it is not the matching closing token for this opening one.
-                    } else {
-                        // The closing token matches the opening one. It is a "chunk"
-
-                        match syntax_check(&line[idx..closing_idx].to_vec()) {
-                            // Within a complete chunk, only a fully correct tree of chunks is allowed
-                            Incomplete  => return Incorrect(line[closing_idx].clone()),
-                            // If the chunk itself is incorrect, return the line as incorrect
-                            Incorrect(token) => return Incorrect(token),
-                            Correct => cursor = closing_idx,
-                        }
-
-                    }
-                }
-
-            } else { // NO closing tokens in the rest of the line
-                // The section is incomplete, but the rest of the section may contain syntactical errors
-
+    loop {
+        let mut contains_matching_tokens = false;
+        for token_set in &matching_tokens {
+            if let Some(position) = mutable_line.find(token_set.as_str()) {
+                contains_matching_tokens = true;
+                mutable_line = mutable_line[0..position].to_string() + &mutable_line[position + 2..]
             }
+        }
+        if !contains_matching_tokens { break };
+    }
+
+    let mut first_remaining_closing_chars = None;
+    for char in mutable_line.chars() {
+        let char_as_string = char.to_string();
+        if closing_tokens.contains(&char_as_string) {
+            first_remaining_closing_chars = Some(char_as_string);
+            break;
         }
     }
 
-    Correct
+    if mutable_line.len() == 0 {
+        return Correct
+    } else if let Some(closing_char) = first_remaining_closing_chars {
+        return Incorrect(closing_char)
+    } else {
+        return Incomplete
+    }
 }
 
 #[cfg(test)]
