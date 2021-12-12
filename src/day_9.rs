@@ -184,19 +184,21 @@ pub(crate) fn expand_basin(minimum: &DEMPoint, dem_graph: &DiGraph<DEMPoint, ()>
 
     let basin = connected_nodes
         .iter()
-        .filter(|dem_point| is_surrounded(dem_point, connected_nodes, dem) )
+        .filter(|dem_point| is_surrounded(dem_point, &connected_nodes, dem) )
         .map(|dem_point| dem_point.clone() )
         .collect();
 
     basin
 }
 
-pub(crate) fn is_surrounded(dem_point: &&DEMPoint, connected_nodes: Vec<DEMPoint>, dem: &DEM) -> bool {
-    let mut is_surrounded_at_four_sides_by_connected_node_ids = true;
-
+pub(crate) fn is_surrounded(dem_point: &DEMPoint, connected_nodes: &Vec<DEMPoint>, dem: &DEM) -> bool {
     let row_idx = dem_point.row;
     let col_idx = dem_point.column;
 
+    // Check for 9: it isn't part of any basin
+    if dem_point.risk == 10 { return  false };
+
+    // Check above if present
     if row_idx > 0 {
         let row_idx_above = row_idx - 1;
         let point_above = DEMPoint {
@@ -205,11 +207,10 @@ pub(crate) fn is_surrounded(dem_point: &&DEMPoint, connected_nodes: Vec<DEMPoint
             risk: dem[row_idx_above][col_idx] + 1
         };
 
-        if !connected_nodes.contains(&point_above) {
-            is_surrounded_at_four_sides_by_connected_node_ids = false;
-        }
+        if !connected_nodes.contains(&point_above) { return false; }
     }
 
+    // Check below if present
     let row_idx_below = row_idx + 1;
     if let Some(_) = dem.get(row_idx_below) {
         let point_below = DEMPoint {
@@ -218,11 +219,10 @@ pub(crate) fn is_surrounded(dem_point: &&DEMPoint, connected_nodes: Vec<DEMPoint
             risk: dem[row_idx_below][col_idx] + 1
         };
 
-        if !connected_nodes.contains(&point_below) {
-            is_surrounded_at_four_sides_by_connected_node_ids = false;
-        }
+        if !connected_nodes.contains(&point_below) { return false; }
     }
 
+    // Check to left if present
     if col_idx > 0 {
         let col_idx_to_left = col_idx - 1;
 
@@ -232,11 +232,10 @@ pub(crate) fn is_surrounded(dem_point: &&DEMPoint, connected_nodes: Vec<DEMPoint
             risk: dem[row_idx][col_idx_to_left] + 1
         };
 
-        if !connected_nodes.contains(&point_to_left) {
-            is_surrounded_at_four_sides_by_connected_node_ids = false;
-        }
+        if !connected_nodes.contains(&point_to_left) { return false;}
     }
 
+    // Check to right if present
     let col_idx_to_right = col_idx + 1;
     if let Some(_) = dem[row_idx].get(col_idx_to_right) {
         let point_to_right = DEMPoint {
@@ -245,12 +244,10 @@ pub(crate) fn is_surrounded(dem_point: &&DEMPoint, connected_nodes: Vec<DEMPoint
             risk: dem[row_idx][col_idx_to_right] + 1
         };
 
-        if !connected_nodes.contains(&point_to_right) {
-            is_surrounded_at_four_sides_by_connected_node_ids = false;
-        }
+        if !connected_nodes.contains(&point_to_right) { return false; }
     }
 
-    is_surrounded_at_four_sides_by_connected_node_ids
+    true
 }
 
 #[cfg(test)]
@@ -296,6 +293,32 @@ fn test_graph_from_den() {
 }
 
 #[test]
+fn test_is_surrounded() {
+    let inputs = read_lines("data/day_9_sample.txt");
+    let dem = parse_dem(&inputs);
+    let dem_graph = graph_from_dem(&dem);
+
+    let global_minimum = DEMPoint{
+        row: 2,
+        column: 2,
+        risk: 6
+    };
+    let glob_min_idx = find_node(&dem_graph, &global_minimum).unwrap();
+    let connected_to_global_minimum = dijkstra(&dem_graph, glob_min_idx, None, |_| 1)
+        .iter()
+        .map(|(node_idx, _)| dem_graph.index(node_idx.clone()).clone() )
+        .collect::<Vec<DEMPoint>>();
+
+    let test_point = DEMPoint {
+        row: 4,
+        column: 0,
+        risk: 10,
+    };
+    let is_point_surrounded = is_surrounded(&test_point, &connected_to_global_minimum, &dem);
+    assert_eq!(is_point_surrounded, false);
+}
+
+#[test]
 fn test_find_three_largest_basins() {
     let inputs = read_lines("data/day_9_sample.txt");
     let dem = parse_dem(&inputs);
@@ -304,6 +327,6 @@ fn test_find_three_largest_basins() {
 
     assert_eq!(largest_basins.len(), 3);
 
-    let first_basin = &largest_basins[0];
+    let first_basin = largest_basins[0].clone();
     assert_eq!(first_basin.len(), 14)
 }
