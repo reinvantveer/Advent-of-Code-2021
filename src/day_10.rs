@@ -75,12 +75,12 @@ pub(crate) fn syntax_check(line: &Vec<String>) -> Syntactical {
     }
 }
 
-pub(crate) fn score_from_incorrect_tokens(token_lines: &Vec<Vec<String>>) -> i32 {
-    let token_scores = HashMap::from([
+pub(crate) fn score_from_incorrect_tokens(token_lines: &Vec<Vec<String>>) -> usize {
+    let token_scores: HashMap<String, usize> = HashMap::from([
         (")".to_string(), 3),
         ("]".to_string(), 57),
         ("}".to_string(), 1197),
-        (">".to_string(), 25137)
+        (">".to_string(), 25137),
     ]);
 
     let mut score = 0;
