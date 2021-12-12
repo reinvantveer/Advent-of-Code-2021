@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use advent_of_code_2021::read_lines;
 use crate::day_10::Syntactical::{Correct, Incomplete, Incorrect};
 
@@ -68,6 +69,25 @@ pub(crate) fn syntax_check(line: &Vec<String>) -> Syntactical {
     }
 }
 
+pub(crate) fn score_from_incorrect_tokens(token_lines: Vec<Vec<String>>) -> i32 {
+    let token_scores = HashMap::from([
+        (")".to_string(), 3),
+        ("]".to_string(), 57),
+        ("}".to_string(), 1197),
+        (">".to_string(), 25137)
+    ]);
+
+    let mut score = 0;
+
+    for line in token_lines {
+        if let Incorrect(offending_token) = syntax_check(&line) {
+            score += token_scores[&offending_token];
+        }
+    }
+
+    score
+}
+
 #[cfg(test)]
 #[test]
 fn test_read_input() {
@@ -86,4 +106,14 @@ fn test_syntax_check() {
 
     let third_line = token_lines[2].clone();
     assert_eq!(syntax_check(&third_line), Incorrect("}".to_string()))
+}
+
+#[test]
+fn test_score() {
+    let inputs = read_lines("data/day_10_sample.txt");
+    let token_lines = read_tokens(&inputs);
+
+    let score = score_from_incorrect_tokens(token_lines);
+
+    assert_eq!(score, 26397);
 }
