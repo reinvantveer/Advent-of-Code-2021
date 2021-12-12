@@ -24,7 +24,7 @@ pub fn parse_vec_usize(inputs: &Vec<String>) -> Vec<usize> {
 #[test]
 fn test_vec_usize_from_input() {
     let inputs = read_lines("data/day_6_sample.txt");
-    let mut school = parse_vec_usize(&inputs);
+    let school = parse_vec_usize(&inputs);
     assert_eq!(school, vec![3, 4, 3, 1, 2]);
 }
 
