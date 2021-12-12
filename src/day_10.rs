@@ -17,7 +17,8 @@ pub(crate) fn read_tokens(inputs: &Vec<String>) -> Vec<Vec<String>> {
         .collect()
 }
 
-enum Syntactical {
+#[derive(PartialEq, Debug)]
+pub(crate) enum Syntactical {
     Incomplete,
     Incorrect(String),
     Correct
@@ -52,8 +53,9 @@ pub(crate) fn syntax_check(line: &Vec<String>) -> Syntactical {
             // Find all closing positions
             let closing_idxs = line
                 .iter()
-                .p()
-                .filter(|c| c == &closing_token)
+                .enumerate()
+                .filter(|(_idx, c)| c == &&closing_token)
+                .map(|(idx, _c)| idx)
                 .collect::<Vec<_>>();
 
             if closing_idxs.len() > 0 {
@@ -65,10 +67,13 @@ pub(crate) fn syntax_check(line: &Vec<String>) -> Syntactical {
                     } else {
                         // The closing token matches the opening one. It is a "chunk"
 
-                        // If the chunk itself is incorrect, return the line as incorrect
-                        if syntax_check(&line[idx..closing_idx].to_vec()) == Incomplete {
-                            return Incorrect(line[closing_idx].clone());
-                        };
+                        match syntax_check(&line[idx..closing_idx].to_vec()) {
+                            // Within a complete chunk, only a fully correct tree of chunks is allowed
+                            Incomplete  => return Incorrect(line[closing_idx].clone()),
+                            // If the chunk itself is incorrect, return the line as incorrect
+                            Incorrect(token) => return Incorrect(token),
+                            Correct => cursor = closing_idx,
+                        }
 
                     }
                 }
