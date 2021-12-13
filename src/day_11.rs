@@ -35,7 +35,9 @@ pub(crate) fn flash_octopi(octopi: &mut OctopusGrid) -> usize {
         if octopi[row][col] > 9 {
             flashes += 1;
             octopi[row][col] = 0;
-            // propagate_energy(octopi, row, col);
+            propagate_energy(octopi, row, col);
+            if row > 0 { row -= 1; }
+            if col > 0 { col -= 1; }
         }
 
         // Advance position along the grid
@@ -93,15 +95,24 @@ pub(crate) fn propagate_energy(octopi: &mut OctopusGrid, row: usize, col: usize)
     }
 
     if has_bottom_left {
-        if octopi[row - 1][col - 1] > 0 {
-            octopi[row - 1][col - 1] += 1;
+        if octopi[row + 1][col - 1] > 0 {
+            octopi[row + 1][col - 1] += 1;
         }
     }
 
     if has_below {
+        if octopi[row + 1][col] > 0 {
+            octopi[row + 1][col] += 1;
+        }
+    }
 
+    if has_bottom_right {
+        if octopi[row + 1][col + 1] > 0 {
+            octopi[row + 1][col + 1] += 1;
+        }
     }
 }
+
 #[cfg(test)]
 #[test]
 fn test_parse() {
