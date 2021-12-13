@@ -11,6 +11,19 @@ pub(crate) fn run() {
     }
 
     println!("After 100 iterations, there have been {} flashes", flashes);
+
+    // Reset
+    octopi = octopi_from_input(&input);
+
+    for iter in 0..500 {
+        simple_energy_increase(&mut octopi);
+        let flash = flash_octopi(&mut octopi);
+
+        if flash == 100 {
+            println!("All octopi flashed after {} iterations!", iter + 1);
+            break;
+        };
+    }
 }
 
 type OctopusGrid = Vec<Vec<usize>>;
