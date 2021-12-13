@@ -32,20 +32,27 @@ pub(crate) fn flash_octopi(octopi: &mut OctopusGrid) -> usize {
     let mut col = 0;
 
     while row < octopi.len() {
+        let mut do_advance = true;
+
         if octopi[row][col] > 9 {
             flashes += 1;
             octopi[row][col] = 0;
             propagate_energy(octopi, row, col);
 
-            // Go back 2 higher and to left: the `match` below will advance one
-            if row > 1 { row -= 2; } else if row > 0 { row -= 1; }
-            if col > 1 { col -= 2; } else if col > 0 { col -= 1; }
+            // Go back 2 higher and to left if possible: the `match` below will advance one
+            if row > 0 { row -= 1; do_advance = false; }
+            if col > 0 { col -= 1; do_advance = false; }
         }
 
-        // Advance position along the grid
+        // Advance position along the grid unless we backtracked
+        if ! do_advance { continue; }
+
         match col < octopi[0].len() - 1 {
             true => col += 1,
-            false => { col = 0; row += 1 }
+            false => {
+                col = 0;
+                row += 1
+            }
         }
     }
 
@@ -200,7 +207,7 @@ fn test_flash() {
         vec![0, 4, 2, 1, 1, 2, 5, 0, 0, 0],
         vec![0, 0, 2, 1, 1, 1, 9, 0, 0, 0],
     ];
-    assert_eq!(octopi,expected)
+    assert_eq!(octopi, expected)
 }
 
 #[test]
