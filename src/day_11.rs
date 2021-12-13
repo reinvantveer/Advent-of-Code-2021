@@ -183,4 +183,35 @@ fn test_flash() {
         vec![8, 7, 0, 0, 0, 0, 6, 8, 4, 8],
     ];
     assert_eq!(octopi, expected);
+
+    // Third iteration
+    simple_energy_increase(&mut octopi);
+    assert_eq!(
+        flash_octopi(&mut octopi), 45);
+    let expected = vec![
+        vec![0, 0, 5, 0, 9, 0, 0, 8, 6, 6],
+        vec![8, 5, 0, 0, 8, 0, 0, 5, 7, 5],
+        vec![9, 9, 0, 0, 0, 0, 0, 0, 3, 9],
+        vec![9, 7, 0, 0, 0, 0, 0, 0, 4, 1],
+        vec![9, 9, 3, 5, 0, 8, 0, 0, 6, 3],
+        vec![7, 7, 1, 2, 3, 0, 0, 0, 0, 0],
+        vec![7, 9, 1, 1, 2, 5, 0, 0, 0, 9],
+        vec![2, 2, 1, 1, 1, 3, 0, 0, 0, 0],
+        vec![0, 4, 2, 1, 1, 2, 5, 0, 0, 0],
+        vec![0, 0, 2, 1, 1, 1, 9, 0, 0, 0],
+    ];
+    assert_eq!(octopi,expected)
+}
+
+#[test]
+fn test_100_steps() {
+    let input = read_lines("data/day_11_sample.txt");
+    let mut octopi = octopi_from_input(&input);
+    let mut flashes = 0;
+
+    for _ in 0..100 {
+        simple_energy_increase(&mut octopi);
+        flashes += flash_octopi(&mut octopi);
+    }
+    assert_eq!(flashes, 1656);
 }
