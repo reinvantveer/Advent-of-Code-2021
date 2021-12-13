@@ -36,8 +36,10 @@ pub(crate) fn flash_octopi(octopi: &mut OctopusGrid) -> usize {
             flashes += 1;
             octopi[row][col] = 0;
             propagate_energy(octopi, row, col);
-            if row > 0 { row -= 1; }
-            if col > 0 { col -= 1; }
+
+            // Go back 2 higher and to left: the `match` below will advance one
+            if row > 1 { row -= 2; } else if row > 0 { row -= 1; }
+            if col > 1 { col -= 2; } else if col > 0 { col -= 1; }
         }
 
         // Advance position along the grid
