@@ -137,14 +137,50 @@ fn test_increase() {
 }
 
 #[test]
+fn test_energy_increase() {
+    let input = read_lines("data/day_11_sample.txt");
+    let mut octopi = octopi_from_input(&input);
+
+    // Once - nothing fancy happens yet
+    simple_energy_increase(&mut octopi);
+    let expected = vec![
+        vec![6, 5, 9, 4, 2, 5, 4, 3, 3, 4],
+        vec![3, 8, 5, 6, 9, 6, 5, 8, 2, 2],
+        vec![6, 3, 7, 5, 6, 6, 7, 2, 8, 4],
+        vec![7, 2, 5, 2, 4, 4, 7, 2, 5, 7],
+        vec![7, 4, 6, 8, 4, 9, 6, 5, 8, 9],
+        vec![5, 2, 7, 8, 6, 3, 5, 7, 5, 6],
+        vec![3, 2, 8, 7, 9, 5, 2, 8, 3, 2],
+        vec![7, 9, 9, 3, 9, 9, 2, 2, 4, 5],
+        vec![5, 9, 5, 7, 9, 5, 9, 6, 6, 5],
+        vec![6, 3, 9, 4, 8, 6, 2, 6, 3, 7],
+    ];
+    assert_eq!(octopi, expected);
+}
+
+#[test]
 fn test_flash() {
     let input = read_lines("data/day_11_sample.txt");
     let mut octopi = octopi_from_input(&input);
 
-    // Once - nothing happens yet
+    // Once - nothing fancy happens yet
     simple_energy_increase(&mut octopi);
     assert_eq!(flash_octopi(&mut octopi), 0);
-    // Twice - now
+
+    // Twice - now flashes start happening
     simple_energy_increase(&mut octopi);
-    assert_eq!(flash_octopi(&mut octopi), 35)
+    assert_eq!(flash_octopi(&mut octopi), 35);
+    let expected = vec![
+        vec![8, 8, 0, 7, 4, 7, 6, 5, 5, 5],
+        vec![5, 0, 8, 9, 0, 8, 7, 0, 5, 4],
+        vec![8, 5, 9, 7, 8, 8, 9, 6, 0, 8],
+        vec![8, 4, 8, 5, 7, 6, 9, 6, 0, 0],
+        vec![8, 7, 0, 0, 9, 0, 8, 8, 0, 0],
+        vec![6, 6, 0, 0, 0, 8, 8, 9, 8, 9],
+        vec![6, 8, 0, 0, 0, 0, 5, 9, 4, 3],
+        vec![0, 0, 0, 0, 0, 0, 7, 4, 5, 6],
+        vec![9, 0, 0, 0, 0, 0, 0, 8, 7, 6],
+        vec![8, 7, 0, 0, 0, 0, 6, 8, 4, 8],
+    ];
+    assert_eq!(octopi, expected);
 }
