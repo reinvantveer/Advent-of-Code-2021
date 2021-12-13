@@ -1,7 +1,16 @@
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
+    let input = read_lines("data/day_11_input.txt");
+    let mut octopi = octopi_from_input(&input);
+    let mut flashes = 0;
 
+    for _ in 0..100 {
+        simple_energy_increase(&mut octopi);
+        flashes += flash_octopi(&mut octopi);
+    }
+
+    println!("After 100 iterations, there have been {} flashes", flashes);
 }
 
 type OctopusGrid = Vec<Vec<usize>>;
