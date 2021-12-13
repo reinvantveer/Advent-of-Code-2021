@@ -28,17 +28,80 @@ pub(crate) fn simple_energy_increase(octopi: &mut OctopusGrid) {
 pub(crate) fn flash_octopi(octopi: &mut OctopusGrid) -> usize {
     let mut flashes = 0;
 
-    for octopus_row in octopi {
-        for octopus in octopus_row {
-            if *octopus > 9 {
-                flashes += 1;
-            }
+    let mut row = 0;
+    let mut col = 0;
+
+    while row < octopi.len() {
+        if octopi[row][col] > 9 {
+            flashes += 1;
+            octopi[row][col] = 0;
+            // propagate_energy(octopi, row, col);
+        }
+
+        // Advance position along the grid
+        match col < octopi[0].len() - 1 {
+            true => col += 1,
+            false => { col = 0; row += 1 }
         }
     }
 
     flashes
 }
 
+pub(crate) fn propagate_energy(octopi: &mut OctopusGrid, row: usize, col: usize) {
+    // Update upper left
+    let rows = octopi.len();
+    let cols = octopi[0].len();
+
+    let has_left = col > 0;
+    let has_above = row > 0;
+    let has_right = col < cols - 1;
+    let has_below = row < rows - 1;
+    let has_upper_left = has_above && has_left;
+    let has_upper_right = has_above && has_right;
+    let has_bottom_left = has_below && has_left;
+    let has_bottom_right = has_below && has_right;
+
+    if has_upper_left {
+        if octopi[row - 1][col - 1] > 0 {
+            octopi[row - 1][col - 1] += 1;
+        }
+    }
+
+    if has_above {
+        if octopi[row - 1][col] > 0 {
+            octopi[row - 1][col] += 1;
+        }
+    }
+
+    if has_upper_right {
+        if octopi[row - 1][col + 1] > 0 {
+            octopi[row - 1][col + 1] += 1;
+        }
+    }
+
+    if has_left {
+        if octopi[row][col - 1] > 0 {
+            octopi[row][col - 1] += 1;
+        }
+    }
+
+    if has_right {
+        if octopi[row][col + 1] > 0 {
+            octopi[row][col + 1] += 1;
+        }
+    }
+
+    if has_bottom_left {
+        if octopi[row - 1][col - 1] > 0 {
+            octopi[row - 1][col - 1] += 1;
+        }
+    }
+
+    if has_below {
+
+    }
+}
 #[cfg(test)]
 #[test]
 fn test_parse() {
