@@ -99,7 +99,9 @@ pub(crate) fn all_paths(
 
 pub(crate) fn all_finished(paths: &Vec<Vec<NodeIndex>>, end_id: &NodeIndex) -> bool {
     for path in paths {
-        if path.last().unwrap() == end_id { return false }
+        if path.last().unwrap() != end_id {
+            return false
+        }
     }
 
     true
