@@ -186,7 +186,7 @@ fn test_single_loop_iteration_paths_expansion() {
 }
 
 #[test]
-fn test_simple_paths() {
+fn test_all_valid_paths() {
     let inputs = read_lines("data/day_12_sample.txt");
     let caves = parse_cave_system(&inputs);
     let paths = all_paths(&caves);
