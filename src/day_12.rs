@@ -42,7 +42,7 @@ pub(crate) fn parse_cave_system(inputs: &Vec<String>) -> Graph<String, (), Undir
     caves
 }
 
-pub(crate) fn all_paths(cave: &Graph<String, (), Undirected>) -> Vec<Vec<NodeIndex>> {
+pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>) -> Vec<Vec<NodeIndex>> {
     // Initialize start and end
     let start_id = find_node(&caves, &"start".to_string()).unwrap();
     let end_id = find_node(&caves, &"end".to_string()).unwrap();
