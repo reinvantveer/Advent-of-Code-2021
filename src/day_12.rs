@@ -55,41 +55,7 @@ pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>) -> Vec<Vec<NodeIn
         let mut modified = false;
 
         for path_id in 0..paths.len() {
-            let last_node_id = paths[path_id].last().unwrap();
-
-            let edge_refs_from_last = caves
-                .edges(*last_node_id)
-                .collect::<Vec<_>>();
-
-            let connected_nodes_from_last = edge_refs_from_last
-                .iter()
-                .map(|e| e.target())
-                .collect::<Vec<_>>();
-
-            // Start by mutating the path in-place
-            let mut path_append_mode = false;
-
-            for node_id in connected_nodes_from_last {
-                // Skip if there is no path to the exit from here
-                if !has_path_connecting(caves, node_id, end_id, None) { continue; }
-
-                // Skip if the node "name" is lower case and already contained in the path
-                let node = caves[node_id].clone();
-                let first_char = node.chars().collect::<Vec<_>>()[0];
-                if first_char.is_lowercase() && paths[path_id].contains(&node_id) { continue };
-
-                // Otherwise: add the node id to the path
-                if !path_append_mode {
-                    // Modify in-place to re-use existing path
-                    paths[path_id].push(node_id);
-                    path_append_mode = true;
-                } else {
-                    // Otherwise: add a new "branch" to the list of paths
-                    let mut new_path = paths[path_id].clone();
-                    new_path.push(node_id);
-                    paths.push(new_path);
-                }
-            }
+            expand_paths(&caves, &mut paths, end_id, &mut modified, path_id)
         }
 
         if all_finished(&paths, &end_id) { break; }
@@ -101,6 +67,75 @@ pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>) -> Vec<Vec<NodeIn
     }
 
     paths
+}
+
+// Converts paths as node indices to their weights: strings in this case
+fn paths_as_strings(cave: &Graph<String, (), Undirected>, paths: &Vec<Vec<NodeIndex>>) -> Vec<Vec<String>> {
+    let paths_strs = paths
+        .iter()
+        .map(|path| {
+            path
+                .iter()
+                .map(|id| cave.index(*id).clone())
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<Vec<String>>>();
+
+    paths_strs
+}
+
+fn expand_paths(cave: &Graph<String, (), Undirected>, paths: &mut Vec<Vec<NodeIndex>>, end_id: NodeIndex, modified: &mut bool, path_id: usize) {
+    let last_node_id = paths[path_id].last().unwrap();
+
+    // If the path is already complete: no need to process further
+    let last_idx = last_node_id.index();
+    let end_idx = end_id.index();
+    if last_idx == end_idx {
+        println!("Path {:?} finished", paths[path_id]);
+        return;
+    }
+
+    let edge_refs_from_last = cave
+        .edges(*last_node_id)
+        .collect::<Vec<_>>();
+
+    let connected_nodes_from_last = edge_refs_from_last
+        .iter()
+        .map(|e| e.target())
+        .collect::<Vec<_>>();
+
+    // Start by mutating the path in-place
+    let mut path_append_mode = false;
+
+    for node_id in connected_nodes_from_last {
+        // Skip if there is no path to the exit from here
+        if !has_path_connecting(cave, node_id, end_id, None) {
+            continue;
+        }
+
+        // Skip if the node "name" is lower case and already contained in the path
+        let node = &cave[node_id];
+        let is_lowercase = &node.to_lowercase() == node;
+        if is_lowercase && paths[path_id].contains(&node_id) { continue };
+
+        // Otherwise: add the node id to the path
+        if !path_append_mode {
+            // Modify in-place to re-use existing path
+            paths[path_id].push(node_id);
+            path_append_mode = true;
+
+            // Set the control flag
+            *modified = true;
+        } else {
+            // Otherwise: add a new "branch" to the list of paths
+            let mut new_path = paths[path_id].clone();
+            new_path.push(node_id);
+            paths.push(new_path);
+
+            // Set the control flag
+            *modified = true;
+        }
+    }
 }
 
 pub(crate) fn all_finished(paths: &Vec<Vec<NodeIndex>>, end_id: &NodeIndex) -> bool {
