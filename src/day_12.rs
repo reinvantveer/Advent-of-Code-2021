@@ -8,11 +8,12 @@ use advent_of_code_2021::day_12_part_2::{valid_double_visit_paths, parse_simple_
 
 pub(crate) fn run() {
     let inputs = read_lines("data/day_12_input.txt");
-    let caves = parse_cave_system(&inputs);
-    let paths = all_paths(&caves, 1);
-    println!("There are {} valid paths out of the caves", paths.len());
+    // let caves = parse_cave_system(&inputs);
+    // let paths = all_paths(&caves, 1);
+    // println!("There are {} valid paths out of the caves", paths.len());
 
-    let paths = all_paths(&caves, 2);
+    let (_, edges) = parse_simple_caves(&inputs);
+    let paths = valid_double_visit_paths(&edges);
     println!("There are {} valid paths with a small cave visit max twice", paths.len());
 }
 
@@ -292,10 +293,22 @@ fn test_simple_paths() {
     }
 
     assert_eq!(paths.len(), 36);
+}
 
+#[test]
+fn test_larger_sample() {
     let inputs = read_lines("data/day_12_larger_sample.txt");
     let (_, edges) = parse_simple_caves(&inputs);
 
     let paths = valid_double_visit_paths(&edges);
-    assert_eq!(paths.len(), 103)
+    assert_eq!(paths.len(), 103);
+}
+
+#[test]
+fn test_largest_sample() {
+    let inputs = read_lines("data/day_12_even_larger_sample.txt");
+    let (_, edges) = parse_simple_caves(&inputs);
+
+    let paths = valid_double_visit_paths(&edges);
+    assert_eq!(paths.len(), 3509);
 }

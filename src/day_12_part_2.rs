@@ -30,8 +30,14 @@ pub fn parse_simple_caves(inputs: &Vec<String>) -> (NodeArray, EdgeArray) {
 
 pub fn valid_double_visit_paths(edges: &EdgeArray) -> Paths {
     let mut paths: Paths = vec![vec!["start".to_string()]];
+    let mut iteration = 0;
 
     loop {
+        iteration += 1;
+        if iteration % 10 == 0 {
+            println!("Running iteration {}", iteration);
+        }
+
         let mut mutated = false;
 
         for path_idx in 0..paths.len() {
