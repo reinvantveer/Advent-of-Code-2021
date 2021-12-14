@@ -147,25 +147,33 @@ pub(crate) fn expand_paths(
         }
 
         // Otherwise: add the node id to the path
-        if !path_append_mode {
-            // Modify in-place to re-use existing path
-            paths[path_id].push(cave_id);
-            path_append_mode = true;
-
-            // Set the control flag
-            *modified = true;
-        } else {
-            // Otherwise: add a new "branch" to the list of paths
-            let mut new_path = paths[path_id].clone();
-            // Get rid of the last node index: it was added in the modify-in-place pass
-            new_path = new_path[0..new_path.len() - 1].to_owned();
-            new_path.push(cave_id);
-            paths.push(new_path);
-
-            // Set the control flag
-            *modified = true;
-        }
+        path_append_mode = add_cave_to_path(paths, path_id, cave_id, path_append_mode, modified);
     }
+}
+
+fn add_cave_to_path(paths: &mut Vec<Vec<NodeIndex>>, path_id: usize, cave_id: NodeIndex, path_append_mode: bool, modified: &mut bool) -> bool {
+    let mut new_append_mode = path_append_mode;
+
+    if !path_append_mode {
+        // Modify in-place to re-use existing path
+        paths[path_id].push(cave_id);
+        new_append_mode = true;
+
+        // Set the control flag
+        *modified = true;
+    } else {
+        // Otherwise: add a new "branch" to the list of paths
+        let mut new_path = paths[path_id].clone();
+        // Get rid of the last node index: it was added in the modify-in-place pass
+        new_path = new_path[0..new_path.len() - 1].to_owned();
+        new_path.push(cave_id);
+        paths.push(new_path);
+
+        // Set the control flag
+        *modified = true;
+    }
+
+    new_append_mode
 }
 
 pub(crate) fn small_cave_visits_already_at_max(path_as_strings: &Vec<String>, max_single_small_cave_visits: usize) -> bool {
