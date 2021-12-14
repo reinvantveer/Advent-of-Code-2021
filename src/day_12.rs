@@ -76,7 +76,7 @@ fn paths_as_strings(cave: &Graph<String, (), Undirected>, paths: &Vec<Vec<NodeIn
         .map(|path| {
             path
                 .iter()
-                .map(|id| cave.index(*id).clone())
+                .map(|id| cave[*id].clone())
                 .collect::<Vec<_>>()
         })
         .collect::<Vec<Vec<String>>>();
