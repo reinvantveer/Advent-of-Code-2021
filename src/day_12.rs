@@ -11,6 +11,9 @@ pub(crate) fn run() {
     let caves = parse_cave_system(&inputs);
     let paths = all_paths(&caves, 1);
     println!("There are {} valid paths out of the caves", paths.len());
+
+    let paths = all_paths(&caves, 2);
+    println!("There are {} valid paths with a small cave visit max twice", paths.len());
 }
 
 pub(crate) fn parse_cave_system(inputs: &Vec<String>) -> Graph<String, (), Undirected>{
@@ -249,4 +252,7 @@ fn test_all_valid_paths() {
     let caves = parse_cave_system(&inputs);
     let paths = all_paths(&caves, 1);
     assert_eq!(paths.len(), 19);
+
+    let paths = all_paths(&caves, 2);
+    assert_eq!(paths.len(), 3509)
 }
