@@ -51,6 +51,9 @@ pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>) -> Vec<Vec<NodeIn
     let mut paths = vec![vec![start_id]];
 
     loop {
+        // Control flag
+        let mut modified = false;
+
         for path_id in 0..paths.len() {
             let last_node_id = paths[path_id].last().unwrap();
 
@@ -90,6 +93,11 @@ pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>) -> Vec<Vec<NodeIn
         }
 
         if all_finished(&paths, &end_id) { break; }
+        if !modified {
+            let paths_str = paths_as_strings(caves, &paths);
+            println!("Paths not modified in last iteration, but not complete: {:?}", paths_str);
+            break;
+        }
     }
 
     paths
