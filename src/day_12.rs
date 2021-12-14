@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use petgraph::graph::{NodeIndex, UnGraph};
 use petgraph::{Graph, Undirected};
 use petgraph::visit::EdgeRef;
-use advent_of_code_2021::read_lines;
-use advent_of_code_2021::find_node;
+use advent_of_code_2021::{read_lines, find_node};
+use advent_of_code_2021::day_12_part_2::{valid_double_visit_paths, parse_simple_caves};
 
 pub(crate) fn run() {
     let inputs = read_lines("data/day_12_input.txt");
@@ -260,7 +260,42 @@ fn test_all_valid_paths() {
     let caves = parse_cave_system(&inputs);
     let paths = all_paths(&caves, 1);
     assert_eq!(paths.len(), 19);
+}
 
-    let paths = all_paths(&caves, 2);
-    assert_eq!(paths.len(), 3509)
+#[test]
+fn test_simple_graph_parse() {
+    let inputs = read_lines("data/day_12_sample.txt");
+    let (nodes, edges) = parse_simple_caves(&inputs);
+    assert_eq!(nodes.len(), 6);
+    assert_eq!(edges.len(), inputs.len() * 2);
+}
+
+#[test]
+fn test_simple_paths() {
+    let inputs = read_lines("data/day_12_sample.txt");
+    let (_, edges) = parse_simple_caves(&inputs);
+
+    let mut paths = valid_double_visit_paths(&edges);
+    paths.sort();
+
+    let mut expected = read_lines("data/day_12_sample_output.txt")
+        .iter()
+        .map(|line| line.split(","))
+        .map(|splits| splits.map(|s| s.to_string()).collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+
+    expected.sort();
+
+    for (idx, path) in paths.iter().enumerate() {
+        assert_eq!(path, &expected[idx]);
+        // println!("{}", idx + 1);
+    }
+
+    assert_eq!(paths.len(), 36);
+
+    let inputs = read_lines("data/day_12_larger_sample.txt");
+    let (_, edges) = parse_simple_caves(&inputs);
+
+    let paths = valid_double_visit_paths(&edges);
+    assert_eq!(paths.len(), 103)
 }
