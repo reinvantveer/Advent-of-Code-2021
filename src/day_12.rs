@@ -1,3 +1,5 @@
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use petgraph::graph::{NodeIndex, UnGraph};
 use petgraph::{Graph, Undirected};
 use petgraph::visit::EdgeRef;
@@ -44,7 +46,7 @@ pub(crate) fn parse_cave_system(inputs: &Vec<String>) -> Graph<String, (), Undir
     caves
 }
 
-pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>, max_small_cave_visits: usize) -> Vec<Vec<NodeIndex>> {
+pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>, max_single_small_cave_visits: usize) -> Vec<Vec<NodeIndex>> {
     // Initialize start and end
     let start_id = find_node(&caves, &"start".to_string()).unwrap();
     let end_id = find_node(&caves, &"end".to_string()).unwrap();
@@ -57,7 +59,7 @@ pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>, max_small_cave_vi
         let mut modified = false;
 
         for path_id in 0..paths.len() {
-            expand_paths(&caves, &mut paths, path_id, end_id, &mut modified, max_small_cave_visits);
+            expand_paths(&caves, &mut paths, path_id, end_id, &mut modified, max_single_small_cave_visits);
         }
 
         if all_finished(&paths, &end_id) { break; }
@@ -76,13 +78,13 @@ pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>, max_small_cave_vi
 }
 
 // Converts paths as node indices to their weights: strings in this case
-fn paths_as_strings(cave: &Graph<String, (), Undirected>, paths: &Vec<Vec<NodeIndex>>) -> Vec<Vec<String>> {
+fn paths_as_strings(caves: &Graph<String, (), Undirected>, paths: &Vec<Vec<NodeIndex>>) -> Vec<Vec<String>> {
     let paths_strs = paths
         .iter()
         .map(|path| {
             path
                 .iter()
-                .map(|id| cave[*id].clone())
+                .map(|id| caves[*id].clone())
                 .collect::<Vec<_>>()
         })
         .collect::<Vec<Vec<String>>>();
@@ -91,12 +93,12 @@ fn paths_as_strings(cave: &Graph<String, (), Undirected>, paths: &Vec<Vec<NodeIn
 }
 
 pub(crate) fn expand_paths(
-    cave: &Graph<String, (), Undirected>,
+    caves: &Graph<String, (), Undirected>,
     paths: &mut Vec<Vec<NodeIndex>>,
     path_id: usize,
     end_id: NodeIndex,
     modified: &mut bool,
-    max_small_cave_visits: usize
+    max_single_small_cave_visits: usize
 ) {
     let last_node_id = paths[path_id].last().unwrap();
 
@@ -108,7 +110,7 @@ pub(crate) fn expand_paths(
         return;
     }
 
-    let edge_refs_from_last = cave
+    let edge_refs_from_last = caves
         .edges(*last_node_id)
         .collect::<Vec<_>>();
 
@@ -120,20 +122,31 @@ pub(crate) fn expand_paths(
     // Start by mutating the path in-place
     let mut path_append_mode = false;
 
-    for node_id in connected_nodes_from_last {
+    for cave_id in connected_nodes_from_last {
         // Skip if the node "name" is lower case and already contained in the path
-        let node = &cave[node_id];
+        let node = &caves[cave_id];
         let is_lowercase = &node.to_lowercase() == node;
-        let visits = paths[path_id]
-            .iter()
-            .filter(|i| *i == &node_id)
-            .count();
-        if is_lowercase && visits >= max_small_cave_visits { continue };
+        let paths_as_strings = paths_as_strings(&caves, &paths);
+
+        // If the cave name is lower case
+        // and the path already contains the node id
+        // and the path already is at the maximum of small cave visits:
+        // continue to the next cave
+        if is_lowercase
+            && paths[path_id].contains(&cave_id)
+            && small_cave_visits_already_at_max(&paths_as_strings[path_id], max_single_small_cave_visits) {
+            continue;
+        }
+
+        // If we doubled back to the start cave: continue
+        if cave_id == *paths[path_id].first().unwrap() {
+            continue;
+        }
 
         // Otherwise: add the node id to the path
         if !path_append_mode {
             // Modify in-place to re-use existing path
-            paths[path_id].push(node_id);
+            paths[path_id].push(cave_id);
             path_append_mode = true;
 
             // Set the control flag
@@ -143,13 +156,36 @@ pub(crate) fn expand_paths(
             let mut new_path = paths[path_id].clone();
             // Get rid of the last node index: it was added in the modify-in-place pass
             new_path = new_path[0..new_path.len() - 1].to_owned();
-            new_path.push(node_id);
+            new_path.push(cave_id);
             paths.push(new_path);
 
             // Set the control flag
             *modified = true;
         }
     }
+}
+
+pub(crate) fn small_cave_visits_already_at_max(path_as_strings: &Vec<String>, max_single_small_cave_visits: usize) -> bool {
+    let mut small_cave_counts = HashMap::new();
+
+    for cave_name in path_as_strings {
+        let is_lowercase = &cave_name.to_lowercase() == cave_name;
+
+        if is_lowercase {
+            let entry = match small_cave_counts.entry(cave_name) {
+                Entry::Occupied(o) => o.into_mut(),
+                Entry::Vacant(v) => v.insert(0_usize),
+            };
+
+            *entry += 1;
+
+            if entry.clone() >= max_single_small_cave_visits {
+                return true;
+            }
+        }
+    }
+
+    false
 }
 
 pub(crate) fn all_finished(paths: &Vec<Vec<NodeIndex>>, end_id: &NodeIndex) -> bool {
@@ -202,8 +238,12 @@ fn test_single_loop_iteration_paths_expansion() {
 fn test_all_valid_paths() {
     let inputs = read_lines("data/day_12_sample.txt");
     let caves = parse_cave_system(&inputs);
+
     let paths = all_paths(&caves, 1);
     assert_eq!(paths.len(), 10);
+
+    let paths = all_paths(&caves, 2);
+    assert_eq!(paths.len(), 36);
 
     let inputs = read_lines("data/day_12_larger_sample.txt");
     let caves = parse_cave_system(&inputs);
