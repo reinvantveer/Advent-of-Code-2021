@@ -117,6 +117,13 @@ fn test_cave_parse() {
 }
 
 #[test]
+fn test_lowercase_comp() {
+    let uppercase = "BLA".to_string();
+    let is_equal = uppercase == uppercase.to_lowercase();
+    assert_eq!(is_equal, false);
+}
+
+#[test]
 fn test_simple_paths() {
     let inputs = read_lines("data/day_12_sample.txt");
     let caves = parse_cave_system(&inputs);
