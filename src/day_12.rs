@@ -62,7 +62,11 @@ pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>) -> Vec<Vec<NodeIn
         if !modified {
             let paths_str = paths_as_strings(caves, &paths);
             println!("Paths not modified in last iteration, but not complete: {:?}", paths_str);
-            break;
+            return paths
+                .iter()
+                .filter(|path| path.last().unwrap() == &end_id)
+                .map(|path| path.clone() )
+                .collect()
         }
     }
 
@@ -84,14 +88,14 @@ fn paths_as_strings(cave: &Graph<String, (), Undirected>, paths: &Vec<Vec<NodeIn
     paths_strs
 }
 
-fn expand_paths(cave: &Graph<String, (), Undirected>, paths: &mut Vec<Vec<NodeIndex>>, end_id: NodeIndex, modified: &mut bool, path_id: usize) {
+pub(crate) fn expand_paths(cave: &Graph<String, (), Undirected>, paths: &mut Vec<Vec<NodeIndex>>, end_id: NodeIndex, modified: &mut bool, path_id: usize) {
     let last_node_id = paths[path_id].last().unwrap();
 
     // If the path is already complete: no need to process further
     let last_idx = last_node_id.index();
     let end_idx = end_id.index();
     if last_idx == end_idx {
-        println!("Path {:?} finished", paths[path_id]);
+        // println!("Path {:?} finished", paths[path_id]);
         return;
     }
 
@@ -108,11 +112,6 @@ fn expand_paths(cave: &Graph<String, (), Undirected>, paths: &mut Vec<Vec<NodeIn
     let mut path_append_mode = false;
 
     for node_id in connected_nodes_from_last {
-        // Skip if there is no path to the exit from here
-        if !has_path_connecting(cave, node_id, end_id, None) {
-            continue;
-        }
-
         // Skip if the node "name" is lower case and already contained in the path
         let node = &cave[node_id];
         let is_lowercase = &node.to_lowercase() == node;
@@ -129,6 +128,8 @@ fn expand_paths(cave: &Graph<String, (), Undirected>, paths: &mut Vec<Vec<NodeIn
         } else {
             // Otherwise: add a new "branch" to the list of paths
             let mut new_path = paths[path_id].clone();
+            // Get rid of the last node index: it was added in the modify-in-place pass
+            new_path = new_path[0..new_path.len() - 1].to_owned();
             new_path.push(node_id);
             paths.push(new_path);
 
@@ -162,6 +163,26 @@ fn test_lowercase_comp() {
     let uppercase = "BLA".to_string();
     let is_equal = uppercase == uppercase.to_lowercase();
     assert_eq!(is_equal, false);
+}
+
+#[test]
+fn test_single_loop_iteration_paths_expansion() {
+    let inputs = read_lines("data/day_12_sample.txt");
+    let caves = parse_cave_system(&inputs);
+
+    let start_node = find_node(&caves, &"start".to_string()).unwrap();
+    let end_node = find_node(&caves, &"end".to_string()).unwrap();
+    let mut paths = vec![vec![start_node]];
+    let mut modified = false;
+    let first_path_idx= 0;
+
+    expand_paths(&caves, &mut paths, end_node, &mut modified, first_path_idx);
+
+    let expected = vec![
+        vec!["start", "b"],
+        vec!["start", "A"],
+    ];
+    assert_eq!(paths_as_strings(&caves, &paths), expected);
 }
 
 #[test]
