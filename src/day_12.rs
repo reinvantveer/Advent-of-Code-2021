@@ -1,12 +1,14 @@
 use petgraph::graph::{NodeIndex, UnGraph};
 use petgraph::{Graph, Undirected};
-use petgraph::algo::has_path_connecting;
 use petgraph::visit::EdgeRef;
 use advent_of_code_2021::read_lines;
 use advent_of_code_2021::find_node;
 
 pub(crate) fn run() {
-
+    let inputs = read_lines("data/day_12_input.txt");
+    let caves = parse_cave_system(&inputs);
+    let paths = all_paths(&caves, 1);
+    println!("There are {} valid paths out of the caves", paths.len());
 }
 
 pub(crate) fn parse_cave_system(inputs: &Vec<String>) -> Graph<String, (), Undirected>{
@@ -42,7 +44,7 @@ pub(crate) fn parse_cave_system(inputs: &Vec<String>) -> Graph<String, (), Undir
     caves
 }
 
-pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>) -> Vec<Vec<NodeIndex>> {
+pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>, max_small_cave_visits: usize) -> Vec<Vec<NodeIndex>> {
     // Initialize start and end
     let start_id = find_node(&caves, &"start".to_string()).unwrap();
     let end_id = find_node(&caves, &"end".to_string()).unwrap();
@@ -55,7 +57,7 @@ pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>) -> Vec<Vec<NodeIn
         let mut modified = false;
 
         for path_id in 0..paths.len() {
-            expand_paths(&caves, &mut paths, end_id, &mut modified, path_id)
+            expand_paths(&caves, &mut paths, path_id, end_id, &mut modified, max_small_cave_visits);
         }
 
         if all_finished(&paths, &end_id) { break; }
@@ -88,7 +90,14 @@ fn paths_as_strings(cave: &Graph<String, (), Undirected>, paths: &Vec<Vec<NodeIn
     paths_strs
 }
 
-pub(crate) fn expand_paths(cave: &Graph<String, (), Undirected>, paths: &mut Vec<Vec<NodeIndex>>, end_id: NodeIndex, modified: &mut bool, path_id: usize) {
+pub(crate) fn expand_paths(
+    cave: &Graph<String, (), Undirected>,
+    paths: &mut Vec<Vec<NodeIndex>>,
+    path_id: usize,
+    end_id: NodeIndex,
+    modified: &mut bool,
+    max_small_cave_visits: usize
+) {
     let last_node_id = paths[path_id].last().unwrap();
 
     // If the path is already complete: no need to process further
@@ -115,7 +124,11 @@ pub(crate) fn expand_paths(cave: &Graph<String, (), Undirected>, paths: &mut Vec
         // Skip if the node "name" is lower case and already contained in the path
         let node = &cave[node_id];
         let is_lowercase = &node.to_lowercase() == node;
-        if is_lowercase && paths[path_id].contains(&node_id) { continue };
+        let visits = paths[path_id]
+            .iter()
+            .filter(|i| *i == &node_id)
+            .count();
+        if is_lowercase && visits >= max_small_cave_visits { continue };
 
         // Otherwise: add the node id to the path
         if !path_append_mode {
@@ -176,7 +189,7 @@ fn test_single_loop_iteration_paths_expansion() {
     let mut modified = false;
     let first_path_idx= 0;
 
-    expand_paths(&caves, &mut paths, end_node, &mut modified, first_path_idx);
+    expand_paths(&caves, &mut paths, first_path_idx, end_node, &mut modified, 1);
 
     let expected = vec![
         vec!["start", "b"],
@@ -189,6 +202,11 @@ fn test_single_loop_iteration_paths_expansion() {
 fn test_all_valid_paths() {
     let inputs = read_lines("data/day_12_sample.txt");
     let caves = parse_cave_system(&inputs);
-    let paths = all_paths(&caves);
+    let paths = all_paths(&caves, 1);
     assert_eq!(paths.len(), 10);
+
+    let inputs = read_lines("data/day_12_larger_sample.txt");
+    let caves = parse_cave_system(&inputs);
+    let paths = all_paths(&caves, 1);
+    assert_eq!(paths.len(), 19);
 }
