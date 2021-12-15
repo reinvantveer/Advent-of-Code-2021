@@ -15,7 +15,7 @@ pub(crate) fn run() {
 
 type NodeArray = Vec<String>;
 type EdgeArray = Vec<(String, String)>;
-type Paths = Vec<Vec<String>>;
+type Paths = HashMap<String, Vec<String>>;
 
 pub(crate) fn parse_cave_system(inputs: &Vec<String>) -> (NodeArray, EdgeArray) {
     let mut nodes = Vec::new();
@@ -45,21 +45,23 @@ pub(crate) fn parse_cave_system(inputs: &Vec<String>) -> (NodeArray, EdgeArray) 
 
 pub(crate) fn all_paths(caves: &EdgeArray, max_single_small_cave_visits: usize) -> Paths {
     // Begin paths from just the start node
-    let mut paths = vec![vec!["start".to_string()]];
+    let mut paths = HashMap::new();
+    let start = "start".to_string();
+    paths.insert(start.clone(), vec![start]);
     let mut paths_len = paths.len();
 
     loop {
-        for path_id in 0..paths.len() {
-            expand_paths(&caves, &mut paths, path_id, max_single_small_cave_visits);
+        for (path_id, _) in paths.clone() {
+            expand_paths(&caves, &mut paths, &path_id, max_single_small_cave_visits);
         }
 
         if paths.len() == paths_len {
             println!("Paths not modified in last iteration, returning paths");
             let ending_paths = paths
                 .iter()
-                .filter(|path| path.last().unwrap() == &"end".to_string())
-                .map(|path| path.clone())
-                .collect();
+                .filter(|(key, _)| key.ends_with(&"end".to_string()))
+                .map(|(key, path)| (key.clone(), path.clone()))
+                .collect::<Paths>();
             return ending_paths
         } else {
             paths_len = paths.len();
@@ -70,10 +72,10 @@ pub(crate) fn all_paths(caves: &EdgeArray, max_single_small_cave_visits: usize) 
 pub(crate) fn expand_paths(
     caves: &EdgeArray,
     paths: &mut Paths,
-    path_id: usize,
+    path_id: &String,
     max_single_small_cave_visits: usize
 ) {
-    let last_cave = paths[path_id].last().unwrap();
+    let last_cave = paths[&path_id.clone()].last().unwrap();
 
     // If the path is already complete: no need to process further
     if last_cave == &"end".to_string() {
@@ -93,8 +95,8 @@ pub(crate) fn expand_paths(
         // continue to the next cave
 
         if (cave.to_lowercase() == cave)
-            && paths[path_id].contains(&cave)
-            && small_cave_visits_already_at_max(&paths[path_id], max_single_small_cave_visits) {
+            && paths[&path_id.clone()].contains(&cave)
+            && small_cave_visits_already_at_max(&paths[&path_id.clone()], max_single_small_cave_visits) {
             continue;
         }
 
@@ -104,19 +106,17 @@ pub(crate) fn expand_paths(
         }
 
         // Otherwise: add the node id to the path
-        add_cave_to_path(paths, path_id, cave);
+        add_cave_to_path(paths, &path_id, cave);
     }
 }
 
-fn add_cave_to_path(paths: &mut Paths, path_id: usize, cave: String) {
+fn add_cave_to_path(paths: &mut Paths, path_id: &String, cave: String) {
     // Add a new "branch" to the list of paths
     let mut new_path = paths[path_id].clone();
     // Get rid of the last node index: it was added in the modify-in-place pass
     new_path.push(cave);
-
-    if !paths.contains(&new_path) {
-        paths.push(new_path);
-    }
+    let key = new_path.join("");
+    paths.insert(key.clone(), new_path);
 }
 
 pub(crate) fn small_cave_visits_already_at_max(path_as_strings: &Vec<String>, max_single_small_cave_visits: usize) -> bool {
@@ -181,16 +181,19 @@ fn test_single_loop_iteration_paths_expansion() {
     let inputs = read_lines("data/day_12_sample.txt");
     let (_, edges) = parse_cave_system(&inputs);
 
-    let mut paths = vec![vec!["start".to_string()]];
-    let first_path_idx= 0;
+    let mut paths = HashMap::new();
+    let start = "start".to_string();
+    paths.insert(start.clone(), vec![start.clone()]);
 
-    expand_paths(&edges, &mut paths, first_path_idx, 1);
+    expand_paths(&edges, &mut paths, &start, 1);
 
-    let expected = vec![
-        vec!["start".to_string()],
-        vec!["start".to_string(), "A".to_string()],
-        vec!["start".to_string(), "b".to_string()],
-    ];
+    let capital_a = "A".to_string();
+    let b = "b".to_string();
+    let expected = HashMap::from([
+        (start.clone(), vec![start.clone()]),
+        (start.clone() + &*capital_a.clone(), vec![start.clone(), capital_a]),
+         (start.clone() + &*b.clone(), vec![start, b]),
+    ]);
     assert_eq!(paths, expected);
 }
 
@@ -200,40 +203,6 @@ fn test_simple_graph_parse() {
     let (nodes, edges) = parse_cave_system(&inputs);
     assert_eq!(nodes.len(), 6);
     assert_eq!(edges.len(), inputs.len() * 2);
-}
-
-#[test]
-fn test_is_double_visited() {
-    let inputs = read_lines("data/day_12_sample.txt");
-    let (_, edges) = parse_cave_system(&inputs);
-
-    let path = vec!["start", "A", "b", "A", "c", "A", "end"]
-        .iter()
-        .map(|n| n.to_string())
-        .collect::<Vec<_>>();
-
-    let cave = "b".to_string();
-
-    let occurrences = path
-        .iter()
-        .filter(|c| *c == &cave)
-        .count();
-    assert_eq!(occurrences, 1);
-
-    let path = vec!["start", "A", "b", "A", "c", "A", "end"]
-        .iter()
-        .map(|n| n.to_string())
-        .collect::<Vec<_>>();
-    let small = small_caves(&edges);
-    assert_eq!(small, vec!["b", "c", "d"]);
-
-    assert_eq!(is_double_visited(&path, &small), false);
-
-    let path2 = vec!["start", "A", "b", "A", "b", "A", "c", "A", "end"]
-        .iter()
-        .map(|n| n.to_string())
-        .collect::<Vec<_>>();
-    assert_eq!(is_double_visited(&path2, &small), true)
 }
 
 #[test]
