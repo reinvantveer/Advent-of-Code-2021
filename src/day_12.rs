@@ -4,12 +4,12 @@ use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
     let inputs = read_lines("data/day_12_input.txt");
-    // let caves = parse_cave_system(&inputs);
-    // let paths = all_paths(&caves, 1);
-    // println!("There are {} valid paths out of the caves", paths.len());
+    let (_, cave_edges) = parse_cave_system(&inputs);
+    let paths = all_paths(&cave_edges, 1);
+    println!("There are {} valid paths out of the caves with one small cave visit", paths.len());
 
     let (_, edges) = parse_cave_system(&inputs);
-    let paths = valid_double_visit_paths(&edges);
+    let paths = all_paths(&edges, 2);
     println!("There are {} valid paths with a small cave visit max twice", paths.len());
 }
 
@@ -54,7 +54,7 @@ pub(crate) fn all_paths(caves: &EdgeArray, max_single_small_cave_visits: usize) 
         }
 
         if paths.len() == paths_len {
-            println!("Paths not modified in last iteration, but not complete: {:?}", paths);
+            println!("Paths not modified in last iteration, returning paths");
             let ending_paths = paths
                 .iter()
                 .filter(|path| path.last().unwrap() == &"end".to_string())
@@ -142,71 +142,6 @@ pub(crate) fn small_cave_visits_already_at_max(path_as_strings: &Vec<String>, ma
     false
 }
 
-pub fn valid_double_visit_paths(cave_edges: &EdgeArray) -> Paths {
-    let mut paths: Paths = vec![vec!["start".to_string()]];
-    let mut iteration = 0;
-    let small_caves = small_caves(&cave_edges);
-
-    loop {
-        iteration += 1;
-        if iteration % 10 == 0 {
-            println!("Running iteration {}", iteration);
-        }
-
-        let mut mutated = false;
-
-        for path_idx in 0..paths.len() {
-            // No need to do anything if the path is already at the finish
-            if paths[path_idx].last().unwrap() == &"end".to_string() {
-                // println!("Path finished: {:?}", paths[path_idx]);
-                continue;
-            }
-
-            // It's is guaranteed there always to be a last node: the start node
-            let last_node = paths[path_idx].last().unwrap();
-
-            let connected_caves = cave_edges
-                .iter()
-                .filter(|edge| edge.0 == *last_node)
-                .map(|edge| edge.1.clone())
-                .filter(|node| node != &"start".to_string())
-                .collect::<NodeArray>();
-
-            for next_cave in connected_caves {
-                let next_cave_is_small = small_caves.contains(&next_cave);
-
-                if next_cave_is_small
-                    && is_double_visited(&paths[path_idx], &small_caves)
-                    && paths[path_idx].contains(&next_cave) {
-                    continue;
-                }
-
-                let mut new_path = paths[path_idx].clone();
-                new_path.push(next_cave);
-                paths.push(new_path);
-                mutated = true;
-            }
-        }
-
-        if !mutated {
-            println!("No more mutations, returning");
-            break;
-        }
-
-        // Safety brake
-        if paths.len() > 10000 {
-            println!("Safety brake!");
-            break;
-        }
-    }
-
-    paths
-        .iter()
-        .filter(|path| path.last().unwrap() == "end")
-        .map(|path| path.clone())
-        .collect::<Vec<_>>()
-}
-
 pub(crate) fn small_caves(cave_edges: &EdgeArray) -> Vec<String> {
     let mut nodes = Vec::new();
 
@@ -231,19 +166,6 @@ pub(crate) fn small_caves(cave_edges: &EdgeArray) -> Vec<String> {
         .collect();
 
     small_caves
-}
-
-pub(crate) fn is_double_visited(path: &Vec<String>, small_caves: &Vec<String>) -> bool {
-    for cave in small_caves {
-        let occurrences = path
-            .iter()
-            .filter(|c| *c == cave)
-            .count();
-
-        if occurrences > 1 { return true; }
-    }
-
-    false
 }
 
 #[cfg(test)]
@@ -314,7 +236,6 @@ fn test_is_double_visited() {
     assert_eq!(is_double_visited(&path2, &small), true)
 }
 
-#[test]
 #[test]
 fn test_all_valid_paths_small_sample() {
     let inputs = read_lines("data/day_12_sample.txt");
