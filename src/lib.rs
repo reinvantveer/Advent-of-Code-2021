@@ -1,5 +1,3 @@
-pub mod day_12_part_2;
-
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
@@ -57,5 +55,4 @@ fn test_find_node() {
 
     let found_node = find_node(&dem_graph, global_minimum).unwrap();
     assert_eq!(found_node.index(), 0)
-
 }

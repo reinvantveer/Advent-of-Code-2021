@@ -1,10 +1,6 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use petgraph::graph::{NodeIndex, UnGraph};
-use petgraph::{Graph, Undirected};
-use petgraph::visit::EdgeRef;
-use advent_of_code_2021::{read_lines, find_node};
-use advent_of_code_2021::day_12_part_2::{valid_double_visit_paths, parse_simple_caves};
+use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
     let inputs = read_lines("data/day_12_input.txt");
@@ -12,169 +8,115 @@ pub(crate) fn run() {
     // let paths = all_paths(&caves, 1);
     // println!("There are {} valid paths out of the caves", paths.len());
 
-    let (_, edges) = parse_simple_caves(&inputs);
+    let (_, edges) = parse_cave_system(&inputs);
     let paths = valid_double_visit_paths(&edges);
     println!("There are {} valid paths with a small cave visit max twice", paths.len());
 }
 
-pub(crate) fn parse_cave_system(inputs: &Vec<String>) -> Graph<String, (), Undirected>{
-    let mut caves = UnGraph::new_undirected();
+type NodeArray = Vec<String>;
+type EdgeArray = Vec<(String, String)>;
+type Paths = Vec<Vec<String>>;
 
-    let nodes_edges: Vec<_> = inputs
-        .iter()
-        .map(|line| {
-            let parts = line.split("-").collect::<Vec<_>>();
-            (parts[0].to_string(), parts[1].to_string())
-        })
-        .collect();
+pub(crate) fn parse_cave_system(inputs: &Vec<String>) -> (NodeArray, EdgeArray) {
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
 
-    for (a, b) in nodes_edges {
-        let node_a;
-        let node_b;
+    for line in inputs {
+        let node_a_b = line.split("-").collect::<Vec<_>>();
 
-        if let Some(node) = find_node(&caves, &a) {
-             node_a = node;
-        } else {
-            node_a = caves.add_node(a);
+        let from = node_a_b[0].to_string();
+        if !nodes.contains(&from) {
+            nodes.push(from.clone());
         }
 
-        if let Some(node) = find_node(&caves, &b) {
-            node_b = node;
-        } else {
-            node_b = caves.add_node(b);
+        let to = node_a_b[1].to_string();
+        if !nodes.contains(&to) {
+            nodes.push(to.clone());
         }
 
-        caves.add_edge(node_a, node_b, ());
+        // Undirected
+        edges.push((from.clone(), to.clone()));
+        edges.push((to, from))
+
     }
 
-    caves
+    (nodes, edges)
 }
 
-pub(crate) fn all_paths(caves: &Graph<String, (), Undirected>, max_single_small_cave_visits: usize) -> Vec<Vec<NodeIndex>> {
-    // Initialize start and end
-    let start_id = find_node(&caves, &"start".to_string()).unwrap();
-    let end_id = find_node(&caves, &"end".to_string()).unwrap();
-
+pub(crate) fn all_paths(caves: &EdgeArray, max_single_small_cave_visits: usize) -> Paths {
     // Begin paths from just the start node
-    let mut paths = vec![vec![start_id]];
+    let mut paths = vec![vec!["start".to_string()]];
+    let mut paths_len = paths.len();
 
     loop {
-        // Control flag
-        let mut modified = false;
-
         for path_id in 0..paths.len() {
-            expand_paths(&caves, &mut paths, path_id, end_id, &mut modified, max_single_small_cave_visits);
+            expand_paths(&caves, &mut paths, path_id, max_single_small_cave_visits);
         }
 
-        if all_finished(&paths, &end_id) { break; }
-        if !modified {
-            let paths_str = paths_as_strings(caves, &paths);
-            println!("Paths not modified in last iteration, but not complete: {:?}", paths_str);
-            return paths
+        if paths.len() == paths_len {
+            println!("Paths not modified in last iteration, but not complete: {:?}", paths);
+            let ending_paths = paths
                 .iter()
-                .filter(|path| path.last().unwrap() == &end_id)
-                .map(|path| path.clone() )
-                .collect()
+                .filter(|path| path.last().unwrap() == &"end".to_string())
+                .map(|path| path.clone())
+                .collect();
+            return ending_paths
+        } else {
+            paths_len = paths.len();
         }
     }
-
-    paths
-}
-
-// Converts paths as node indices to their weights: strings in this case
-fn paths_as_strings(caves: &Graph<String, (), Undirected>, paths: &Vec<Vec<NodeIndex>>) -> Vec<Vec<String>> {
-    let paths_strs = paths
-        .iter()
-        .map(|path| {
-            path
-                .iter()
-                .map(|id| caves[*id].clone())
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<Vec<String>>>();
-
-    paths_strs
 }
 
 pub(crate) fn expand_paths(
-    caves: &Graph<String, (), Undirected>,
-    paths: &mut Vec<Vec<NodeIndex>>,
+    caves: &EdgeArray,
+    paths: &mut Paths,
     path_id: usize,
-    end_id: NodeIndex,
-    modified: &mut bool,
     max_single_small_cave_visits: usize
 ) {
-    let last_node_id = paths[path_id].last().unwrap();
+    let last_cave = paths[path_id].last().unwrap();
 
     // If the path is already complete: no need to process further
-    let last_idx = last_node_id.index();
-    let end_idx = end_id.index();
-    if last_idx == end_idx {
-        // println!("Path {:?} finished", paths[path_id]);
+    if last_cave == &"end".to_string() {
         return;
     }
 
-    let edge_refs_from_last = caves
-        .edges(*last_node_id)
-        .collect::<Vec<_>>();
-
-    let connected_nodes_from_last = edge_refs_from_last
+    let connected_nodes_from_last = caves
         .iter()
-        .map(|e| e.target())
+        .filter(|edge| edge.0 == *last_cave)
+        .map(|e| e.1.clone())
         .collect::<Vec<_>>();
 
-    // Start by mutating the path in-place
-    let mut path_append_mode = false;
-
-    for cave_id in connected_nodes_from_last {
-        // Skip if the node "name" is lower case and already contained in the path
-        let node = &caves[cave_id];
-        let is_lowercase = &node.to_lowercase() == node;
-        let paths_as_strings = paths_as_strings(&caves, &paths);
-
+    for cave in connected_nodes_from_last {
         // If the cave name is lower case
         // and the path already contains the node id
         // and the path already is at the maximum of small cave visits:
         // continue to the next cave
-        if is_lowercase
-            && paths[path_id].contains(&cave_id)
-            && small_cave_visits_already_at_max(&paths_as_strings[path_id], max_single_small_cave_visits) {
+
+        if (cave.to_lowercase() == cave)
+            && paths[path_id].contains(&cave)
+            && small_cave_visits_already_at_max(&paths[path_id], max_single_small_cave_visits) {
             continue;
         }
 
         // If we doubled back to the start cave: continue
-        if cave_id == *paths[path_id].first().unwrap() {
+        if cave == "start" {
             continue;
         }
 
         // Otherwise: add the node id to the path
-        path_append_mode = add_cave_to_path(paths, path_id, cave_id, path_append_mode, modified);
+        add_cave_to_path(paths, path_id, cave);
     }
 }
 
-fn add_cave_to_path(paths: &mut Vec<Vec<NodeIndex>>, path_id: usize, cave_id: NodeIndex, path_append_mode: bool, modified: &mut bool) -> bool {
-    let mut new_append_mode = path_append_mode;
+fn add_cave_to_path(paths: &mut Paths, path_id: usize, cave: String) {
+    // Add a new "branch" to the list of paths
+    let mut new_path = paths[path_id].clone();
+    // Get rid of the last node index: it was added in the modify-in-place pass
+    new_path.push(cave);
 
-    if !path_append_mode {
-        // Modify in-place to re-use existing path
-        paths[path_id].push(cave_id);
-        new_append_mode = true;
-
-        // Set the control flag
-        *modified = true;
-    } else {
-        // Otherwise: add a new "branch" to the list of paths
-        let mut new_path = paths[path_id].clone();
-        // Get rid of the last node index: it was added in the modify-in-place pass
-        new_path = new_path[0..new_path.len() - 1].to_owned();
-        new_path.push(cave_id);
+    if !paths.contains(&new_path) {
         paths.push(new_path);
-
-        // Set the control flag
-        *modified = true;
     }
-
-    new_append_mode
 }
 
 pub(crate) fn small_cave_visits_already_at_max(path_as_strings: &Vec<String>, max_single_small_cave_visits: usize) -> bool {
@@ -200,25 +142,111 @@ pub(crate) fn small_cave_visits_already_at_max(path_as_strings: &Vec<String>, ma
     false
 }
 
-pub(crate) fn all_finished(paths: &Vec<Vec<NodeIndex>>, end_id: &NodeIndex) -> bool {
-    for path in paths {
-        if path.last().unwrap() != end_id {
-            return false
+pub fn valid_double_visit_paths(cave_edges: &EdgeArray) -> Paths {
+    let mut paths: Paths = vec![vec!["start".to_string()]];
+    let mut iteration = 0;
+    let small_caves = small_caves(&cave_edges);
+
+    loop {
+        iteration += 1;
+        if iteration % 10 == 0 {
+            println!("Running iteration {}", iteration);
+        }
+
+        let mut mutated = false;
+
+        for path_idx in 0..paths.len() {
+            // No need to do anything if the path is already at the finish
+            if paths[path_idx].last().unwrap() == &"end".to_string() {
+                // println!("Path finished: {:?}", paths[path_idx]);
+                continue;
+            }
+
+            // It's is guaranteed there always to be a last node: the start node
+            let last_node = paths[path_idx].last().unwrap();
+
+            let connected_caves = cave_edges
+                .iter()
+                .filter(|edge| edge.0 == *last_node)
+                .map(|edge| edge.1.clone())
+                .filter(|node| node != &"start".to_string())
+                .collect::<NodeArray>();
+
+            for next_cave in connected_caves {
+                let next_cave_is_small = small_caves.contains(&next_cave);
+
+                if next_cave_is_small
+                    && is_double_visited(&paths[path_idx], &small_caves)
+                    && paths[path_idx].contains(&next_cave) {
+                    continue;
+                }
+
+                let mut new_path = paths[path_idx].clone();
+                new_path.push(next_cave);
+                paths.push(new_path);
+                mutated = true;
+            }
+        }
+
+        if !mutated {
+            println!("No more mutations, returning");
+            break;
+        }
+
+        // Safety brake
+        if paths.len() > 10000 {
+            println!("Safety brake!");
+            break;
         }
     }
 
-    true
+    paths
+        .iter()
+        .filter(|path| path.last().unwrap() == "end")
+        .map(|path| path.clone())
+        .collect::<Vec<_>>()
+}
+
+pub(crate) fn small_caves(cave_edges: &EdgeArray) -> Vec<String> {
+    let mut nodes = Vec::new();
+
+    for edge in cave_edges {
+        if !nodes.contains(&edge.0) {
+            nodes.push(edge.0.clone())
+        }
+
+        if !nodes.contains(&edge.1) {
+            nodes.push(edge.1.clone())
+        }
+    }
+
+    let small_caves = nodes
+        .iter()
+        .filter(|cave| {
+            &&cave.to_lowercase() == cave
+                && cave != &&"start".to_string()
+                && cave != &&"end".to_string()
+        })
+        .map(|n| n.clone())
+        .collect();
+
+    small_caves
+}
+
+pub(crate) fn is_double_visited(path: &Vec<String>, small_caves: &Vec<String>) -> bool {
+    for cave in small_caves {
+        let occurrences = path
+            .iter()
+            .filter(|c| *c == cave)
+            .count();
+
+        if occurrences > 1 { return true; }
+    }
+
+    false
 }
 
 #[cfg(test)]
-#[test]
-fn test_cave_parse() {
-    let inputs = read_lines("data/day_12_sample.txt");
-    let caves = parse_cave_system(&inputs);
-    let start_node = find_node(&caves, &"start".to_string()).unwrap();
-    assert_eq!(start_node.index(), 0);
-}
-
 #[test]
 fn test_lowercase_comp() {
     let uppercase = "BLA".to_string();
@@ -229,86 +257,96 @@ fn test_lowercase_comp() {
 #[test]
 fn test_single_loop_iteration_paths_expansion() {
     let inputs = read_lines("data/day_12_sample.txt");
-    let caves = parse_cave_system(&inputs);
+    let (_, edges) = parse_cave_system(&inputs);
 
-    let start_node = find_node(&caves, &"start".to_string()).unwrap();
-    let end_node = find_node(&caves, &"end".to_string()).unwrap();
-    let mut paths = vec![vec![start_node]];
-    let mut modified = false;
+    let mut paths = vec![vec!["start".to_string()]];
     let first_path_idx= 0;
 
-    expand_paths(&caves, &mut paths, first_path_idx, end_node, &mut modified, 1);
+    expand_paths(&edges, &mut paths, first_path_idx, 1);
 
     let expected = vec![
-        vec!["start", "b"],
-        vec!["start", "A"],
+        vec!["start".to_string()],
+        vec!["start".to_string(), "A".to_string()],
+        vec!["start".to_string(), "b".to_string()],
     ];
-    assert_eq!(paths_as_strings(&caves, &paths), expected);
-}
-
-#[test]
-fn test_all_valid_paths() {
-    let inputs = read_lines("data/day_12_sample.txt");
-    let caves = parse_cave_system(&inputs);
-
-    let paths = all_paths(&caves, 1);
-    assert_eq!(paths.len(), 10);
-
-    let paths = all_paths(&caves, 2);
-    assert_eq!(paths.len(), 36);
-
-    let inputs = read_lines("data/day_12_larger_sample.txt");
-    let caves = parse_cave_system(&inputs);
-    let paths = all_paths(&caves, 1);
-    assert_eq!(paths.len(), 19);
+    assert_eq!(paths, expected);
 }
 
 #[test]
 fn test_simple_graph_parse() {
     let inputs = read_lines("data/day_12_sample.txt");
-    let (nodes, edges) = parse_simple_caves(&inputs);
+    let (nodes, edges) = parse_cave_system(&inputs);
     assert_eq!(nodes.len(), 6);
     assert_eq!(edges.len(), inputs.len() * 2);
 }
 
 #[test]
-fn test_simple_paths() {
+fn test_is_double_visited() {
     let inputs = read_lines("data/day_12_sample.txt");
-    let (_, edges) = parse_simple_caves(&inputs);
+    let (_, edges) = parse_cave_system(&inputs);
 
-    let mut paths = valid_double_visit_paths(&edges);
-    paths.sort();
-
-    let mut expected = read_lines("data/day_12_sample_output.txt")
+    let path = vec!["start", "A", "b", "A", "c", "A", "end"]
         .iter()
-        .map(|line| line.split(","))
-        .map(|splits| splits.map(|s| s.to_string()).collect::<Vec<_>>())
+        .map(|n| n.to_string())
         .collect::<Vec<_>>();
 
-    expected.sort();
+    let cave = "b".to_string();
 
-    for (idx, path) in paths.iter().enumerate() {
-        assert_eq!(path, &expected[idx]);
-        // println!("{}", idx + 1);
-    }
+    let occurrences = path
+        .iter()
+        .filter(|c| *c == &cave)
+        .count();
+    assert_eq!(occurrences, 1);
 
+    let path = vec!["start", "A", "b", "A", "c", "A", "end"]
+        .iter()
+        .map(|n| n.to_string())
+        .collect::<Vec<_>>();
+    let small = small_caves(&edges);
+    assert_eq!(small, vec!["b", "c", "d"]);
+
+    assert_eq!(is_double_visited(&path, &small), false);
+
+    let path2 = vec!["start", "A", "b", "A", "b", "A", "c", "A", "end"]
+        .iter()
+        .map(|n| n.to_string())
+        .collect::<Vec<_>>();
+    assert_eq!(is_double_visited(&path2, &small), true)
+}
+
+#[test]
+#[test]
+fn test_all_valid_paths_small_sample() {
+    let inputs = read_lines("data/day_12_sample.txt");
+    let (_, cave_edges) = parse_cave_system(&inputs);
+
+    let paths = all_paths(&cave_edges, 1);
+    assert_eq!(paths.len(), 10);
+
+    let paths = all_paths(&cave_edges, 2);
     assert_eq!(paths.len(), 36);
 }
 
 #[test]
-fn test_larger_sample() {
+fn test_valid_paths_larger_sample() {
     let inputs = read_lines("data/day_12_larger_sample.txt");
-    let (_, edges) = parse_simple_caves(&inputs);
+    let (_, cave_edges) = parse_cave_system(&inputs);
 
-    let paths = valid_double_visit_paths(&edges);
+    let paths = all_paths(&cave_edges, 1);
+    assert_eq!(paths.len(), 19);
+
+    let paths = all_paths(&cave_edges, 2);
     assert_eq!(paths.len(), 103);
 }
 
 #[test]
 fn test_largest_sample() {
     let inputs = read_lines("data/day_12_even_larger_sample.txt");
-    let (_, edges) = parse_simple_caves(&inputs);
+    let (_, cave_edges) = parse_cave_system(&inputs);
 
-    let paths = valid_double_visit_paths(&edges);
+    let paths = all_paths(&cave_edges, 1);
+    assert_eq!(paths.len(), 226);
+
+    let paths = all_paths(&cave_edges, 2);
     assert_eq!(paths.len(), 3509);
 }
