@@ -114,7 +114,7 @@ fn test_parse_grid() {
     assert_eq!(grid.len(), 11);
     assert_eq!(grid[0].len(), 15);
     
-    let mut expected = vec![
+    let expected = vec![
         false, false, false, true, false, false, true, false, false, true, false,
         false, false, false, false, true, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false, false, false, false,
