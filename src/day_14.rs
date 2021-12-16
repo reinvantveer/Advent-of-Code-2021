@@ -126,4 +126,8 @@ fn test_manual_iterate() {
     expand_polymer(&mut template, &rules);
     assert_eq!(template, vec!["N", "B", "C", "C", "N", "B", "B", "B", "C", "B", "H", "C", "B"]);
 
+    expand_polymer(&mut template, &rules);
+    assert_eq!(template,
+               vec!["N", "B", "B", "B", "C", "N", "C", "C", "N", "B", "B", "N", "B", "N", "B", "B", "C", "H", "B", "H", "H", "B", "C", "H", "B"]);
+
 }
