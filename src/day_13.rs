@@ -4,11 +4,31 @@ use crate::day_13::Fold::{Left, Up};
 
 pub(crate) fn run() {
     let inputs = read_lines("data/day_13_input.txt");
-    let (mut grid, instructions) = parse_grid(&inputs);
+    let (mut grid, folds) = parse_grid(&inputs);
 
-    fold_grid(&mut grid, &instructions[0]);
+    fold_grid(&mut grid, &folds[0]);
     let dots = count_dots(&grid);
     println!("After the first (left) fold, there are {} dots", dots);
+
+    // Execute other folds
+    for fold in folds[1..].iter() {
+        fold_grid(&mut grid, fold);
+    }
+
+    let xs = 0..50;
+    let ys = 0..10;
+
+    for y in ys {
+        for x in xs.clone() {
+            if grid[x][y] == true {
+                print!("#")
+            } else {
+                print!(".")
+            }
+        }
+        print!("\n");
+    }
+    // println!("After all the folds, the code is: {:?}", grid);
 }
 
 #[derive(Debug, PartialEq)]
@@ -92,10 +112,14 @@ pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
                     // between the fold row and the row below
                     let mut mirrored_y = fold_position.clone();
                     mirrored_y *= 2;
-                    mirrored_y = mirrored_y - y_below_fold_idx;
 
-                    // Copy over only `true` values by OR-ing
-                    grid[x_idx][mirrored_y] = grid[x_idx][y_below_fold_idx] | grid[x_idx][mirrored_y];
+                    // Check if the fold is before half the page. Can't copy over values beyond double half
+                    if mirrored_y >= y_below_fold_idx {
+                        mirrored_y = mirrored_y - y_below_fold_idx;
+
+                        // Copy over only `true` values by OR-ing
+                        grid[x_idx][mirrored_y] = grid[x_idx][y_below_fold_idx] | grid[x_idx][mirrored_y];
+                    }
 
                     // Empty the stuff beyond the fold
                     grid[x_idx][y_below_fold_idx] = false;
@@ -120,10 +144,12 @@ pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
                     // between the fold col and the col to the right
                     let mut mirrored_x = fold_position.clone();
                     mirrored_x *= 2;
-                    mirrored_x = mirrored_x - x_right_of_fold_idx;
 
-                    // Copy over only `true` values by OR-ing
-                    grid[mirrored_x][y_idx] = grid[x_right_of_fold_idx][y_idx] | grid[mirrored_x][y_idx];
+                    if x_right_of_fold_idx <= mirrored_x {
+                        mirrored_x = mirrored_x - x_right_of_fold_idx;
+                        // Copy over only `true` values by OR-ing
+                        grid[mirrored_x][y_idx] = grid[x_right_of_fold_idx][y_idx] | grid[mirrored_x][y_idx];
+                    }
 
                     // Empty the stuff beyond the fold
                     grid[x_right_of_fold_idx][y_idx] = false;
