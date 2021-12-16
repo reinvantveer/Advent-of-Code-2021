@@ -85,7 +85,9 @@ pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
                     // We mirror to the opposite side of the fold
                     // So row 8 copies to row 6, which is the fold row 7 minus the difference
                     // between the fold row and the row below
-                    let mirrored_y = (2 * *fold_position) - y_below_fold_idx;
+                    let mut mirrored_y = fold_position.clone();
+                    mirrored_y *= 2;
+                    mirrored_y = mirrored_y - y_below_fold_idx;
 
                     if grid[x_idx][y_below_fold_idx] == true {
                         grid[x_idx][mirrored_y] = grid[x_idx][y_below_fold_idx];
