@@ -69,25 +69,30 @@ pub(crate) fn parse_grid(inputs: &Vec<String>) -> (Vec<Vec<bool>>, Vec<Fold>) {
 
 pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
     match fold {
-        Up(fold_row) => {
+        Up(fold_position) => {
             // Take all row indices below the fold
-            // The example folds at row 7, so the row idxs are 8 thru 11
-            let row_idxs_below_fold = (fold_row + 1)..grid.len();
+            // The example folds at row 7, so the row idxs are 8 thru 15
+            let y_idxs_below_fold = (fold_position + 1)..grid[0].len();
+
+            // We need all the column indices: they all get mirrored to the other side of the
+            // fold
+            let x_idxs = 0..grid.len();
 
             // Iterate over the range instead of the rows themselves, otherwise we get into bad
             // borrow territory
-            for row_below_fold_idx in row_idxs_below_fold {
-                // We need all the column indices: they all get mirrored to the other side of the
-                // fold
-                let col_idxs = 0..grid[row_below_fold_idx].len();
-
-                for c_idx in col_idxs {
+            for y_below_fold_idx in y_idxs_below_fold {
+                for x_idx in x_idxs.clone() {
                     // We mirror to the opposite side of the fold
                     // So row 8 copies to row 6, which is the fold row 7 minus the difference
                     // between the fold row and the row below
-                    let mirrored_row = fold_row + fold_row - row_below_fold_idx;
-                    if grid[row_below_fold_idx][c_idx] == true { grid[mirrored_row][c_idx] = grid[row_below_fold_idx][c_idx]; }
-                    grid[row_below_fold_idx][c_idx] = false;
+                    let mirrored_y = (2 * *fold_position) - y_below_fold_idx;
+
+                    if grid[x_idx][y_below_fold_idx] == true {
+                        grid[x_idx][mirrored_y] = grid[x_idx][y_below_fold_idx];
+                    }
+
+                    // Empty the stuff below the fold
+                    grid[x_idx][y_below_fold_idx] = false;
                 }
             }
         }
