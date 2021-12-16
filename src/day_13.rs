@@ -112,27 +112,26 @@ fn test_parse_grid() {
     assert_eq!(grid.len(), 11);
     assert_eq!(grid[0].len(), 15);
     
-    let expected = vec![
-        vec![false, false, false, true, false, false, true, false, false, true, false],
-        vec![false, false, false, false, true, false, false, false, false, false, false],
-        vec![false, false, false, false, false, false, false, false, false, false, false],
-        vec![true, false, false, false, false, false, false, false, false, false, false],
-        vec![false, false, false, true, false, false, false, false, true, false, true],
-        vec![false, false, false, false, false, false, false, false, false, false, false],
-        vec![false, false, false, false, false, false, false, false, false, false, false],
-        vec![false, false, false, false, false, false, false, false, false, false, false],
-        vec![false, false, false, false, false, false, false, false, false, false, false],
-        vec![false, false, false, false, false, false, false, false, false, false, false],
-        vec![false, true, false, false, false, false, true, false, true, true, false],
-        vec![false, false, false, false, true, false, false, false, false, false, false],
-        vec![false, false, false, false, false, false, true, false, false, false, true],
-        vec![true, false, false, false, false, false, false, false, false, false, false],
-        vec![true, false, true, false, false, false, false, false, false, false, false],
+    let mut expected = vec![
+        false, false, false, true, false, false, true, false, false, true, false,
+        false, false, false, false, true, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false,
+        true, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, true, false, false, false, false, true, false, true,
+        false, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false,
+        false, true, false, false, false, false, true, false, true, true, false,
+        false, false, false, false, true, false, false, false, false, false, false,
+        false, false, false, false, false, false, true, false, false, false, true,
+        true, false, false, false, false, false, false, false, false, false, false,
+        true, false, true, false, false, false, false, false, false, false, false,
     ];
-
-    assert_eq!(grid, expected);
-
-    assert_eq!(fold_instructions, vec![Y(7), X(5)]);
+    let array = Array2::from_shape_vec((11, 15), expected).unwrap();
+    assert_eq!(array.shape(), [11, 15]);
+    assert_eq!(fold_instructions, vec![Up(7), Right(5)]);
 }
 
 #[test]
