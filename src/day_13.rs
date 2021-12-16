@@ -3,7 +3,9 @@ use advent_of_code_2021::read_lines;
 use crate::day_13::Fold::{Left, Up};
 
 pub(crate) fn run() {
-
+    // let inputs = read_lines("data/day_13_input.txt");
+    // let (grid, instructions) = parse_grid(&inputs);
+    // fold_grid()
 }
 
 #[derive(Debug, PartialEq)]
@@ -166,7 +168,7 @@ fn test_parse_grid() {
     ];
     let array = Array2::from_shape_vec((11, 15), expected).unwrap();
     assert_eq!(array.shape(), [11, 15]);
-    assert_eq!(fold_instructions, vec![Up(7), Right(5)]);
+    assert_eq!(fold_instructions, vec![Up(7), Left(5)]);
 }
 
 #[test]
@@ -179,5 +181,6 @@ fn test_fold() {
     assert_eq!(dots, 17);
 
     fold_grid(&mut grid, &fold_instructions[1]);
+    let dots = count_dots(&grid);
     assert_eq!(dots, 16);
 }
