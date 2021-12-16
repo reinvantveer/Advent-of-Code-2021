@@ -142,32 +142,6 @@ pub(crate) fn small_cave_visits_already_at_max(path_as_strings: &Vec<String>, ma
     false
 }
 
-pub(crate) fn small_caves(cave_edges: &EdgeArray) -> Vec<String> {
-    let mut nodes = Vec::new();
-
-    for edge in cave_edges {
-        if !nodes.contains(&edge.0) {
-            nodes.push(edge.0.clone())
-        }
-
-        if !nodes.contains(&edge.1) {
-            nodes.push(edge.1.clone())
-        }
-    }
-
-    let small_caves = nodes
-        .iter()
-        .filter(|cave| {
-            &&cave.to_lowercase() == cave
-                && cave != &&"start".to_string()
-                && cave != &&"end".to_string()
-        })
-        .map(|n| n.clone())
-        .collect();
-
-    small_caves
-}
-
 #[cfg(test)]
 #[test]
 fn test_lowercase_comp() {
