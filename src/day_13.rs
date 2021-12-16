@@ -1,3 +1,4 @@
+use ndarray::{Array2};
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
