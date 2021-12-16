@@ -4,6 +4,7 @@ pub(crate) fn run() {
 
 }
 
+#[derive(Clone)]
 pub(crate) struct InsertRule {
     first_match: String,
     adjacent_match: String,
@@ -57,8 +58,14 @@ pub(crate) fn expand_polymer(template: &mut Vec<String>, rules: &Vec<InsertRule>
 }
 
 pub(crate) fn find_matches(template: &Vec<String>, rule: &InsertRule) -> Vec<usize> {
-    let positions = Vec::new();
+    let mut positions = Vec::new();
 
+    let elem_idxs = 0..template.len() - 1;
+    for el_idx in elem_idxs {
+        if template[el_idx] == rule.first_match && template[el_idx + 1] == rule.adjacent_match {
+            positions.push(el_idx);
+        }
+    }
     positions
 }
 
@@ -70,6 +77,17 @@ fn test_parse() {
 
     assert_eq!(template, vec!["N", "N", "C", "B"]);
     assert_eq!(rules.len(), 16)
+}
+
+#[test]
+fn test_matching_seqs() {
+    let inputs = read_lines("data/day_14_sample.txt");
+    let (mut template, rules) = parse_inputs(&inputs);
+
+    let n_n = rules[7].clone();
+    let positions = find_matches(&template, &n_n);
+    assert_eq!(positions, vec![0])
+
 }
 
 #[test]
