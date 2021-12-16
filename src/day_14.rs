@@ -44,6 +44,24 @@ pub(crate) fn parse_inputs(inputs: &Vec<String>) -> (Vec<String>, Vec<InsertRule
     (template, rules)
 }
 
+pub(crate) fn expand_polymer(template: &mut Vec<String>, rules: &Vec<InsertRule>) {
+    // Create a set of insert positions that will contain all the indexes of where the new
+    // element is to be inserted
+    let mut insert_positions = vec![Vec::new(); rules.len()];
+
+    // First, find all the matching positions before mutation
+    for (rule_idx, rule) in rules.iter().enumerate() {
+        let positions = find_matches(&template, &rule);
+        insert_positions[rule_idx] = positions;
+    }
+}
+
+pub(crate) fn find_matches(template: &Vec<String>, rule: &InsertRule) -> Vec<usize> {
+    let positions = Vec::new();
+
+    positions
+}
+
 #[cfg(test)]
 #[test]
 fn test_parse() {
@@ -52,4 +70,13 @@ fn test_parse() {
 
     assert_eq!(template, vec!["N", "N", "C", "B"]);
     assert_eq!(rules.len(), 16)
+}
+
+#[test]
+fn test_manual_iterate() {
+    let inputs = read_lines("data/day_14_sample.txt");
+    let (mut template, rules) = parse_inputs(&inputs);
+
+    expand_polymer(&mut template, &rules);
+    assert_eq!(template, vec!["N", "C", "N", "B", "C", "H", "B"])
 }
