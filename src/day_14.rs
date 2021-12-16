@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
@@ -94,6 +95,20 @@ pub(crate) fn find_matches(template: &Vec<String>, rule: &InsertRule) -> Vec<usi
     matches
 }
 
+pub(crate) fn count_elems(template: &Vec<String>) -> (usize, usize) {
+    let mut counts = HashMap::new();
+
+    for elem in template {
+        let counter = counts.entry(elem).or_insert(0);
+        *counter += 1;
+    }
+
+    let mut values = counts.values().collect::<Vec<_>>();
+    values.sort();
+
+    (**values.first().unwrap(), **values.last().unwrap())
+}
+
 #[cfg(test)]
 #[test]
 fn test_parse() {
@@ -129,5 +144,17 @@ fn test_manual_iterate() {
     expand_polymer(&mut template, &rules);
     assert_eq!(template,
                vec!["N", "B", "B", "B", "C", "N", "C", "C", "N", "B", "B", "N", "B", "N", "B", "B", "C", "H", "B", "H", "H", "B", "C", "H", "B"]);
+}
 
+#[test]
+fn test_count() {
+    let inputs = read_lines("data/day_14_sample.txt");
+    let (mut template, rules) = parse_inputs(&inputs);
+
+    for _ in 0..10 {
+        expand_polymer(&mut template, &rules);
+    }
+
+    let (min, max) = count_elems(&template);
+    assert_eq!(max - min, 1588);
 }
