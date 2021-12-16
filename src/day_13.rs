@@ -43,21 +43,21 @@ pub(crate) fn parse_grid(inputs: &Vec<String>) -> (Vec<Vec<bool>>, Vec<Fold>) {
         let y = coords[1].parse::<usize>().unwrap();
 
         // Expand if necessary
-        if x >= grid[0].len() {
-            let extra_xs = vec![false; x + 1 - grid[0].len()];
-            for x_idx in 0..grid.len() {
-                grid[x_idx].extend(extra_xs.clone());
-            }
-        }
-
-        if y >= grid.len() {
+        if x >= grid.len() {
             let cloned_first_row: Vec<bool> = grid
                 .get(0)
                 .unwrap_or(&vec![]).clone();
 
-            let extra_rows = vec![vec![false; cloned_first_row.len()]; y + 1 - grid.len()];
+            let extra_rows = vec![vec![false; cloned_first_row.len()]; x + 1 - grid.len()];
 
             grid.extend(extra_rows);
+        }
+
+        if y >= grid[0].len() {
+            let extra_xs = vec![false; y + 1 - grid[0].len()];
+            for x_idx in 0..grid.len() {
+                grid[x_idx].extend(extra_xs.clone());
+            }
         }
 
         // Mark position
