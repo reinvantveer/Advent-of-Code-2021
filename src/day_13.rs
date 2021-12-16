@@ -96,7 +96,33 @@ pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
                 }
             }
         }
-        Right(_) => {}
+        Left(fold_position) => {
+            // Take all x indices to the right of the fold
+            // The example folds at x = 5, so the x to the right idxs are 5 thru 11
+            let x_idxs_right_of_fold = (fold_position + 1)..grid.len();
+
+            // We need all the y indices: they all get mirrored to the other side of the
+            // fold
+            let y_idxs = 0..grid[0].len();
+
+            // Iterate over the range instead of the rows themselves, otherwise we get into bad
+            // borrow territory
+            for x_right_of_fold_idx in x_idxs_right_of_fold {
+                for y_idx in y_idxs.clone() {
+                    // We mirror to the opposite side of the fold
+                    // So col 8 copies to row 6, which is the fold col 7 minus the difference
+                    // between the fold col and the col to the right
+                    let mut mirrored_x = fold_position.clone();
+                    mirrored_x *= 2;
+                    mirrored_x = mirrored_x - x_right_of_fold_idx;
+
+                    if grid[x_right_of_fold_idx][y_idx] == true {
+                        grid[mirrored_x][y_idx] = grid[x_right_of_fold_idx][y_idx];
+                    }
+                    grid[x_right_of_fold_idx][y_idx] = false;
+                }
+            }
+        }
     }
 }
 
