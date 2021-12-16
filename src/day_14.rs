@@ -2,7 +2,15 @@ use std::collections::HashMap;
 use advent_of_code_2021::read_lines;
 
 pub(crate) fn run() {
+    let inputs = read_lines("data/day_14_input.txt");
+    let (mut template, rules) = parse_inputs(&inputs);
 
+    for _ in 0..10 {
+        expand_polymer(&mut template, &rules);
+    }
+
+    let (min, max) = count_elems(&template);
+    print!("The max {} minus min {} is {}", max, min, max - min);
 }
 
 #[derive(Clone)]
