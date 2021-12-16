@@ -1,5 +1,6 @@
 use ndarray::{Array2};
 use advent_of_code_2021::read_lines;
+use crate::day_13::Fold::{Right, Up};
 
 pub(crate) fn run() {
 
@@ -7,8 +8,8 @@ pub(crate) fn run() {
 
 #[derive(Debug, PartialEq)]
 pub enum Fold {
-    X(usize),
-    Y(usize),
+    Right(usize),
+    Up(usize),
 }
 
 pub(crate) fn parse_grid(inputs: &Vec<String>) -> (Vec<Vec<bool>>, Vec<Fold>) {
@@ -28,9 +29,9 @@ pub(crate) fn parse_grid(inputs: &Vec<String>) -> (Vec<Vec<bool>>, Vec<Fold>) {
             let amount = direction_amount[1].parse::<usize>().unwrap();
 
             if direction == "y" {
-                fold_instructions.push(Y(amount));
+                fold_instructions.push(Up(amount));
             } else {
-                fold_instructions.push(X(amount));
+                fold_instructions.push(Right(amount));
             }
 
             continue;
@@ -68,7 +69,7 @@ pub(crate) fn parse_grid(inputs: &Vec<String>) -> (Vec<Vec<bool>>, Vec<Fold>) {
 
 pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
     match fold {
-        Y(fold_row) => {
+        Up(fold_row) => {
             // Take all row indices below the fold
             // The example folds at row 7, so the row idxs are 8 thru 11
             let row_idxs_below_fold = (fold_row + 1)..grid.len();
@@ -90,7 +91,7 @@ pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
                 }
             }
         }
-        X(num) => {}
+        Right(_) => {}
     }
 }
 
