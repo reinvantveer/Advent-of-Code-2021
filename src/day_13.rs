@@ -1,6 +1,6 @@
 use ndarray::{Array2};
 use advent_of_code_2021::read_lines;
-use crate::day_13::Fold::{Right, Up};
+use crate::day_13::Fold::{Left, Up};
 
 pub(crate) fn run() {
 
@@ -8,7 +8,7 @@ pub(crate) fn run() {
 
 #[derive(Debug, PartialEq)]
 pub enum Fold {
-    Right(usize),
+    Left(usize),
     Up(usize),
 }
 
@@ -31,7 +31,7 @@ pub(crate) fn parse_grid(inputs: &Vec<String>) -> (Vec<Vec<bool>>, Vec<Fold>) {
             if direction == "y" {
                 fold_instructions.push(Up(amount));
             } else {
-                fold_instructions.push(Right(amount));
+                fold_instructions.push(Left(amount));
             }
 
             continue;
