@@ -89,11 +89,10 @@ pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
                     mirrored_y *= 2;
                     mirrored_y = mirrored_y - y_below_fold_idx;
 
-                    if grid[x_idx][y_below_fold_idx] == true {
-                        grid[x_idx][mirrored_y] = grid[x_idx][y_below_fold_idx];
-                    }
+                    // Copy over only `true` values by OR-ing
+                    grid[x_idx][mirrored_y] = grid[x_idx][y_below_fold_idx] | grid[x_idx][mirrored_y];
 
-                    // Empty the stuff below the fold
+                    // Empty the stuff beyond the fold
                     grid[x_idx][y_below_fold_idx] = false;
                 }
             }
@@ -118,9 +117,10 @@ pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
                     mirrored_x *= 2;
                     mirrored_x = mirrored_x - x_right_of_fold_idx;
 
-                    if grid[x_right_of_fold_idx][y_idx] == true {
-                        grid[mirrored_x][y_idx] = grid[x_right_of_fold_idx][y_idx];
-                    }
+                    // Copy over only `true` values by OR-ing
+                    grid[mirrored_x][y_idx] = grid[x_right_of_fold_idx][y_idx] | grid[mirrored_x][y_idx];
+
+                    // Empty the stuff beyond the fold
                     grid[x_right_of_fold_idx][y_idx] = false;
                 }
             }
