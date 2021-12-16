@@ -76,18 +76,18 @@ pub(crate) fn fold_grid(grid: &mut Vec<Vec<bool>>, fold: &Fold) {
 
             // Iterate over the range instead of the rows themselves, otherwise we get into bad
             // borrow territory
-            for r_idx in row_idxs_below_fold {
+            for row_below_fold_idx in row_idxs_below_fold {
                 // We need all the column indices: they all get mirrored to the other side of the
                 // fold
-                let col_idxs = 0..grid[r_idx].len();
+                let col_idxs = 0..grid[row_below_fold_idx].len();
 
                 for c_idx in col_idxs {
                     // We mirror to the opposite side of the fold
                     // So row 8 copies to row 6, which is the fold row 7 minus the difference
                     // between the fold row and the row below
-                    let mirrored_row = fold_row + fold_row - r_idx;
-                    grid[mirrored_row][c_idx] = grid[r_idx][c_idx];
-                    grid[r_idx][c_idx] = false;
+                    let mirrored_row = fold_row + fold_row - row_below_fold_idx;
+                    if grid[row_below_fold_idx][c_idx] == true { grid[mirrored_row][c_idx] = grid[row_below_fold_idx][c_idx]; }
+                    grid[row_below_fold_idx][c_idx] = false;
                 }
             }
         }
