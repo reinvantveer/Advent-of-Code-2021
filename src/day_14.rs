@@ -10,7 +10,12 @@ pub(crate) fn run() {
     }
 
     let (min, max) = count_elems(&template);
-    print!("The max {} minus min {} is {}", max, min, max - min);
+    println!("The max {} minus min {} is {}", max, min, max - min);
+
+    for iteration in 10..40 {
+        expand_polymer(&mut template, &rules);
+        println!("Iteration {} yields a polymer of size {}", iteration + 1, &template.len());
+    }
 }
 
 #[derive(Clone)]
