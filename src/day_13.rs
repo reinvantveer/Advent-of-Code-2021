@@ -3,9 +3,12 @@ use advent_of_code_2021::read_lines;
 use crate::day_13::Fold::{Left, Up};
 
 pub(crate) fn run() {
-    // let inputs = read_lines("data/day_13_input.txt");
-    // let (grid, instructions) = parse_grid(&inputs);
-    // fold_grid()
+    let inputs = read_lines("data/day_13_input.txt");
+    let (mut grid, instructions) = parse_grid(&inputs);
+
+    fold_grid(&mut grid, &instructions[0]);
+    let dots = count_dots(&grid);
+    println!("After the first (left) fold, there are {} dots", dots);
 }
 
 #[derive(Debug, PartialEq)]
