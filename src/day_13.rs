@@ -170,11 +170,14 @@ fn test_parse_grid() {
 }
 
 #[test]
-fn test_first_fold() {
+fn test_fold() {
     let inputs = read_lines("data/day_13_sample.txt");
     let (mut grid, fold_instructions) = parse_grid(&inputs);
 
     fold_grid(&mut grid, &fold_instructions[0]);
     let dots = count_dots(&grid);
     assert_eq!(dots, 17);
+
+    fold_grid(&mut grid, &fold_instructions[1]);
+    assert_eq!(dots, 16);
 }
