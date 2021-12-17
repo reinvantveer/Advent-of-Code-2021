@@ -161,24 +161,29 @@ pub(crate) fn even_faster_expand_iter(
 pub fn even_faster_expand(pair_counts: &mut HashMap<String, usize>, rules_map: &HashMap<String, String>) {
     let before_mutations = pair_counts.clone();
 
-    for pair in before_mutations.keys() {
-        if let Some(elem_to_insert) = rules_map.get(&*pair) {
-            // First: decrease the count for the pair that gets split to insert a new element
-            let pair_to_split_count = pair_counts.get_mut(&*pair).unwrap();
-            *pair_to_split_count -= 1;
+    for (pair, unmodified_count) in before_mutations {
+        if rules_map.get(&*pair) == None { continue; }
 
-            // Then: increase the count on what pairs are added to left and right of the insert
-            let first_char = pair.chars().collect::<Vec<_>>()[0].to_string();
-            let second_char = pair.chars().collect::<Vec<_>>()[1].to_string();
-            let new_pair_to_left = first_char + elem_to_insert;
-            let new_pair_to_right = elem_to_insert.clone() + &*second_char;
+        let elem_to_insert = rules_map.get(&*pair).unwrap();
 
-            let entry_to_left = pair_counts.entry(new_pair_to_left).or_insert(0);
-            *entry_to_left += 1;
+        // First: decrease the count for the pair that gets split to insert a new element
+        let pair_to_split_count = pair_counts.get_mut(&*pair).unwrap();
+        // But skip if it does not occur in the polymer anymore
+        if unmodified_count == 0 { continue; }
 
-            let entry_to_right = pair_counts.entry(new_pair_to_right).or_insert(0);
-            *entry_to_right += 1;
-        }
+        *pair_to_split_count -= 1;
+
+        // Then: increase the count on what pairs are added to left and right of the insert
+        let first_char = pair.chars().collect::<Vec<_>>()[0].to_string();
+        let second_char = pair.chars().collect::<Vec<_>>()[1].to_string();
+        let new_pair_to_left = first_char + elem_to_insert;
+        let new_pair_to_right = elem_to_insert.clone() + &*second_char;
+
+        let entry_to_left = pair_counts.entry(new_pair_to_left).or_insert(0);
+        *entry_to_left += 1;
+
+        let entry_to_right = pair_counts.entry(new_pair_to_right).or_insert(0);
+        *entry_to_right += 1;
     }
 }
 
@@ -295,6 +300,7 @@ fn test_even_faster_iterate() {
     let (template, rules) = parse_inputs(&inputs);
     let rules_map = rules_as_map(&rules);
 
+    // NCNBCHB
     let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 1);
     assert_eq!(pair_counts, HashMap::from([
         ("NN".to_string(), 0),
@@ -321,8 +327,10 @@ fn test_even_faster_iterate() {
         ("BB".to_string(), 2),
         ("CB".to_string(), 2),
         ("BH".to_string(), 1),
+        ("HC".to_string(), 1),
     ]));
 
+    // NBBBCNCCNBBNBNBBCHBHHBCHB
     let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 3);
     assert_eq!(pair_counts, HashMap::from([
         ("NB".to_string(), 4),
