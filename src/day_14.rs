@@ -152,16 +152,16 @@ pub(crate) fn even_faster_expand_iter(
     }
 
     for _ in 0..iterations {
-        even_faster_expand(template, rules_map, &mut pair_counts)
+        even_faster_expand(&mut pair_counts, rules_map)
     }
 
     (pair_counts, start_pair, end_pair)
 }
 
-pub fn even_faster_expand(template: &Vec<String>, rules_map: &HashMap<String, String>, pair_counts: &mut HashMap<String, usize>) {
-    for pair_elems in template.clone().windows(2) {
-        let pair = pair_elems.join("");
+pub fn even_faster_expand(pair_counts: &mut HashMap<String, usize>, rules_map: &HashMap<String, String>) {
+    let before_mutations = pair_counts.clone();
 
+    for pair in before_mutations.keys() {
         if let Some(elem_to_insert) = rules_map.get(&*pair) {
             // First: decrease the count for the pair that gets split to insert a new element
             let pair_to_split_count = pair_counts.get_mut(&*pair).unwrap();
@@ -305,6 +305,22 @@ fn test_even_faster_iterate() {
         ("NC".to_string(), 1),
         ("CH".to_string(), 1),
         ("HB".to_string(), 1),
+    ]));
+
+    // NBCCNBBBCBHCB
+    let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 2);
+    assert_eq!(pair_counts, HashMap::from([
+        ("NN".to_string(), 0),
+        ("CH".to_string(), 0),
+        ("NC".to_string(), 0),
+        ("HB".to_string(), 0),
+        ("NB".to_string(), 2),
+        ("BC".to_string(), 2),
+        ("CC".to_string(), 1),
+        ("CN".to_string(), 1),
+        ("BB".to_string(), 2),
+        ("CB".to_string(), 2),
+        ("BH".to_string(), 1),
     ]));
 
     let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 3);
