@@ -196,10 +196,10 @@ pub(crate) fn min_max_from_pairs(pair_counts: &HashMap<String, usize>, start_pai
         let elems = pair.split("").collect::<Vec<_>>();
 
         let elem_count = elem_counts.entry(elems[0]).or_insert(0);
-        *elem_count += 1;
+        *elem_count += *count;
 
         let elem_count = elem_counts.entry(elems[1]).or_insert(0);
-        *elem_count += 1;
+        *elem_count += *count;
     }
 
     let mut counts = elem_counts.values().collect::<Vec<_>>();
@@ -352,7 +352,7 @@ fn test_even_faster_iterate() {
         ("HB".to_string(), 3),
     ]));
 
-    let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 40);
+    let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 10);
     let (min, max) = min_max_from_pairs(&pair_counts, start, end);
     assert_eq!(max - min, 1588);
 }
