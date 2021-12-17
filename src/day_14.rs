@@ -132,48 +132,76 @@ pub(crate) fn fast_expand(template: &mut Vec<String>, rules_map: &HashMap<String
     }
 }
 
-pub(crate) fn even_faster_expand(
-    template: &mut Vec<String>,
+pub(crate) fn even_faster_expand_iter(
+    template: &Vec<String>,
     rules_map: &HashMap<String, String>,
     iterations: usize,
-) -> HashMap<String, usize> {
-    let mut sequence_map: HashMap<String, usize> = HashMap::new();
+) -> (HashMap<String, usize>, String, String) {
+    let mut pair_counts: HashMap<String, usize> = HashMap::new();
 
     // Start and end sequences
-    let mut start_sequence = template[0].clone() + &template[1];
+    let mut start_pair = template[0].clone() + &template[1];
     let last_idx = template.len() - 1;
-    let mut end_sequence = template[last_idx - 1].clone() + &template[last_idx];
+    let mut end_pair = template[last_idx - 1].clone() + &template[last_idx];
 
+    // Build initial hashmap
     for elem_idx in 0..template.len() - 1 {
-        let seq_at_idx = template[elem_idx].clone() + &template[elem_idx + 1];
-        let entry = sequence_map.entry(seq_at_idx).or_insert(0);
+        let pair_at_idx = template[elem_idx].clone() + &template[elem_idx + 1];
+        let entry = pair_counts.entry(pair_at_idx).or_insert(0);
         *entry += 1;
     }
 
     for _ in 0..iterations {
-        for (key, to_insert) in rules_map {
-            if let Some(&mut mut to_mutate) = sequence_map.get_mut(key) {
-                to_mutate -= 1;
-
-                let first_char = key.chars().collect::<Vec<_>>()[0].to_string();
-                let second_char = key.chars().collect::<Vec<_>>()[1].to_string();
-                let new_seq_to_left = first_char + to_insert;
-                let new_seq_to_right = to_insert.clone() + &*second_char;
-
-                let entry_to_left = sequence_map.entry(new_seq_to_left).or_insert(0);
-                *entry_to_left += 1;
-
-                let entry_to_right = sequence_map.entry(new_seq_to_right).or_insert(0);
-                *entry_to_right += 1;
-            }
-        }
+        even_faster_expand(template, rules_map, &mut pair_counts)
     }
 
-    sequence_map
+    (pair_counts, start_pair, end_pair)
 }
 
-pub(crate) fn min_max_from_seqs(sequence_map: &HashMap<String, usize>) -> (usize, usize) {
+pub fn even_faster_expand(template: &Vec<String>, rules_map: &HashMap<String, String>, pair_counts: &mut HashMap<String, usize>) {
+    for pair_elems in template.clone().windows(2) {
+        let pair = pair_elems.join("");
 
+        if let Some(elem_to_insert) = rules_map.get(&*pair) {
+            // First: decrease the count for the pair that gets split to insert a new element
+            let pair_to_split_count = pair_counts.get_mut(&*pair).unwrap();
+            *pair_to_split_count -= 1;
+
+            // Then: increase the count on what pairs are added to left and right of the insert
+            let first_char = pair.chars().collect::<Vec<_>>()[0].to_string();
+            let second_char = pair.chars().collect::<Vec<_>>()[1].to_string();
+            let new_pair_to_left = first_char + elem_to_insert;
+            let new_pair_to_right = elem_to_insert.clone() + &*second_char;
+
+            let entry_to_left = pair_counts.entry(new_pair_to_left).or_insert(0);
+            *entry_to_left += 1;
+
+            let entry_to_right = pair_counts.entry(new_pair_to_right).or_insert(0);
+            *entry_to_right += 1;
+        }
+    }
+}
+
+pub(crate) fn min_max_from_pairs(pair_counts: &HashMap<String, usize>, start_pair: String, end_pair: String) -> (usize, usize) {
+    let mut elem_counts: HashMap<&str, usize> = HashMap::new();
+
+    for (pair, count) in pair_counts {
+        let elems = pair.split("").collect::<Vec<_>>();
+
+        let elem_count = elem_counts.entry(elems[0]).or_insert(0);
+        *elem_count += 1;
+
+        let elem_count = elem_counts.entry(elems[1]).or_insert(0);
+        *elem_count += 1;
+    }
+
+    let mut counts = elem_counts.values().collect::<Vec<_>>();
+    counts.sort();
+
+    let min = *counts.first().unwrap().clone();
+    let max = *counts.last().unwrap().clone();
+
+    (min, max)
 }
 
 pub(crate) fn find_matches(template: &Vec<String>, rule: &InsertRule) -> Vec<usize> {
@@ -264,10 +292,35 @@ fn test_manual_fast_iterate() {
 #[test]
 fn test_even_faster_iterate() {
     let inputs = read_lines("data/day_14_sample.txt");
-    let (mut template, rules) = parse_inputs(&inputs);
+    let (template, rules) = parse_inputs(&inputs);
     let rules_map = rules_as_map(&rules);
 
-    let sequence_map = even_faster_expand(&mut template, &rules_map, 10);
+    let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 1);
+    assert_eq!(pair_counts, HashMap::from([
+        ("NN".to_string(), 0),
+        ("CB".to_string(), 0),
+        ("NB".to_string(), 1),
+        ("BC".to_string(), 1),
+        ("CN".to_string(), 1),
+        ("NC".to_string(), 1),
+        ("CH".to_string(), 1),
+        ("HB".to_string(), 1),
+    ]));
+
+    let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 3);
+    assert_eq!(pair_counts, HashMap::from([
+        ("NB".to_string(), 4),
+        ("BB".to_string(), 4),
+        ("BC".to_string(), 3),
+        ("CN".to_string(), 2),
+        ("CC".to_string(), 1),
+        ("CC".to_string(), 1),
+        ("BN".to_string(), 2),
+        ("CH".to_string(), 2),
+        ("HB".to_string(), 3),
+    ]));
+
+    let (min, max) = min_max_from_pairs(&pair_counts, start, end);
 
     assert_eq!(max - min, 1588);
 }
