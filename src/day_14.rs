@@ -333,6 +333,9 @@ fn test_even_faster_iterate() {
     // NBBBCNCCNBBNBNBBCHBHHBCHB
     let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 3);
     assert_eq!(pair_counts, HashMap::from([
+        ("NN".to_string(), 0),
+        ("HC".to_string(), 0),
+        ("CB".to_string(), 0),
         ("NB".to_string(), 4),
         ("BB".to_string(), 4),
         ("BC".to_string(), 3),
@@ -341,6 +344,9 @@ fn test_even_faster_iterate() {
         ("CC".to_string(), 1),
         ("BN".to_string(), 2),
         ("CH".to_string(), 2),
+        ("BH".to_string(), 1),
+        ("HH".to_string(), 1),
+        ("NC".to_string(), 1),
         ("HB".to_string(), 3),
     ]));
 
