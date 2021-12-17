@@ -59,6 +59,18 @@ pub(crate) fn parse_inputs(inputs: &Vec<String>) -> (Vec<String>, Vec<InsertRule
     (template, rules)
 }
 
+pub(crate) fn rules_as_map(rules: &Vec<InsertRule>) -> HashMap<String, String> {
+    let mut rules_map = HashMap::new();
+
+    for rule in rules {
+        let key = rule.first_match.clone() + &rule.adjacent_match;
+        let value = rule.to_insert.clone();
+        rules_map.insert(key, value);
+    }
+
+    rules_map
+}
+
 pub(crate) fn expand_polymer(template: &mut Vec<String>, rules: &Vec<InsertRule>) {
     // Create a set of insert positions that will contain all the indexes of where the new
     // element is to be inserted
@@ -93,6 +105,10 @@ pub(crate) fn expand_polymer(template: &mut Vec<String>, rules: &Vec<InsertRule>
             }
         }
     }
+}
+
+pub(crate) fn fast_expand(template: &mut Vec<String>, rules_map: &HashMap<String, String>) {
+
 }
 
 pub(crate) fn find_matches(template: &Vec<String>, rule: &InsertRule) -> Vec<usize> {
@@ -155,6 +171,23 @@ fn test_manual_iterate() {
     assert_eq!(template, vec!["N", "B", "C", "C", "N", "B", "B", "B", "C", "B", "H", "C", "B"]);
 
     expand_polymer(&mut template, &rules);
+    assert_eq!(template,
+               vec!["N", "B", "B", "B", "C", "N", "C", "C", "N", "B", "B", "N", "B", "N", "B", "B", "C", "H", "B", "H", "H", "B", "C", "H", "B"]);
+}
+
+#[test]
+fn test_manual_fast_iterate() {
+    let inputs = read_lines("data/day_14_sample.txt");
+    let (mut template, rules) = parse_inputs(&inputs);
+    let rules_map = rules_as_map(&rules);
+
+    fast_expand(&mut template, &rules_map);
+    assert_eq!(template, vec!["N", "C", "N", "B", "C", "H", "B"]);
+
+    fast_expand(&mut template, &rules_map);
+    assert_eq!(template, vec!["N", "B", "C", "C", "N", "B", "B", "B", "C", "B", "H", "C", "B"]);
+
+    fast_expand(&mut template, &rules_map);
     assert_eq!(template,
                vec!["N", "B", "B", "B", "C", "N", "C", "C", "N", "B", "B", "N", "B", "N", "B", "B", "C", "H", "B", "H", "H", "B", "C", "H", "B"]);
 }
