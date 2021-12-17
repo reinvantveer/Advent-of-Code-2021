@@ -170,7 +170,8 @@ pub fn even_faster_expand(pair_counts: &mut HashMap<String, usize>, rules_map: &
         // First: decrease the count for the pair that gets split to insert a new element
         let pair_to_split_count = pair_counts.get_mut(&unmodified_pair).unwrap();
 
-        *pair_to_split_count = 0;
+        // Inserting destroys all previous pairs of the type being split
+        *pair_to_split_count -= unmodified_count;
 
         // Then: increase the count on what pairs are added to left and right of the insert
         let pair_chars = unmodified_pair.chars().collect::<Vec<_>>();
