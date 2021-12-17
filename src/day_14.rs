@@ -136,13 +136,11 @@ pub(crate) fn even_faster_expand_iter(
     template: &Vec<String>,
     rules_map: &HashMap<String, String>,
     iterations: usize,
-) -> (HashMap<String, usize>, String, String) {
+) -> (HashMap<String, usize>, String) {
     let mut pair_counts: HashMap<String, usize> = HashMap::new();
 
-    // Start and end sequences
+    // Start pair is needed for the count
     let mut start_pair = template[0].clone() + &template[1];
-    let last_idx = template.len() - 1;
-    let mut end_pair = template[last_idx - 1].clone() + &template[last_idx];
 
     // Build initial hashmap
     for elem_idx in 0..template.len() - 1 {
@@ -152,13 +150,17 @@ pub(crate) fn even_faster_expand_iter(
     }
 
     for _ in 0..iterations {
-        even_faster_expand(&mut pair_counts, rules_map)
+        even_faster_expand(&mut pair_counts, rules_map, &mut start_pair)
     }
 
-    (pair_counts, start_pair, end_pair)
+    (pair_counts, start_pair)
 }
 
-pub fn even_faster_expand(pair_counts: &mut HashMap<String, usize>, rules_map: &HashMap<String, String>) {
+pub fn even_faster_expand(
+    pair_counts: &mut HashMap<String, usize>,
+    rules_map: &HashMap<String, String>,
+    start_pair: &mut String
+) {
     let unmodified_counts = pair_counts.clone();
 
     for (unmodified_pair, unmodified_count) in unmodified_counts {
@@ -181,25 +183,35 @@ pub fn even_faster_expand(pair_counts: &mut HashMap<String, usize>, rules_map: &
         let new_pair_to_left = first_elem + &elem_to_insert;
         let new_pair_to_right = elem_to_insert.to_string() + &second_elem;
 
-        let entry_to_left = pair_counts.entry(new_pair_to_left).or_insert(0);
+        let entry_to_left = pair_counts.entry(new_pair_to_left.clone()).or_insert(0);
         *entry_to_left += unmodified_count;
 
         let entry_to_right = pair_counts.entry(new_pair_to_right).or_insert(0);
         *entry_to_right += unmodified_count;
+
+        // Update the start pair to the new pair to the left
+        if unmodified_pair == start_pair.clone() {
+            *start_pair = new_pair_to_left;
+        }
     }
 }
 
-pub(crate) fn min_max_from_pairs(pair_counts: &HashMap<String, usize>, start_pair: String, end_pair: String) -> (usize, usize) {
+pub(crate) fn min_max_from_pairs(pair_counts: &HashMap<String, usize>, start_pair: String) -> (usize, usize) {
     let mut elem_counts: HashMap<&str, usize> = HashMap::new();
 
     for (pair, count) in pair_counts {
-        let elems = pair.split("").collect::<Vec<_>>();
+        // Since all pairs MUST overlap, we only need to sum the last elements
+        let first_elem = pair.split("").collect::<Vec<_>>()[0];
+        let last_elem = pair.split("").collect::<Vec<_>>()[1];
 
-        let elem_count = elem_counts.entry(elems[0]).or_insert(0);
+        let elem_count = elem_counts.entry(last_elem).or_insert(0);
         *elem_count += *count;
 
-        let elem_count = elem_counts.entry(elems[1]).or_insert(0);
-        *elem_count += *count;
+        // Except for the start pair: it has a non-overlapping first element
+        if pair == &start_pair {
+            let elem_count = elem_counts.entry(first_elem).or_insert(0);
+            *elem_count += *count;
+        }
     }
 
     let mut counts = elem_counts.values().collect::<Vec<_>>();
@@ -303,7 +315,8 @@ fn test_even_faster_iterate() {
     let rules_map = rules_as_map(&rules);
 
     // NCNBCHB
-    let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 1);
+    let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 1);
+    assert_eq!(start, "NC");
     assert_eq!(pair_counts, HashMap::from([
         ("NN".to_string(), 0),
         ("CB".to_string(), 0),
@@ -316,7 +329,8 @@ fn test_even_faster_iterate() {
     ]));
 
     // NBCCNBBBCBHCB
-    let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 2);
+    let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 2);
+    assert_eq!(start, "NB");
     assert_eq!(pair_counts, HashMap::from([
         ("NN".to_string(), 0),
         ("CH".to_string(), 0),
@@ -333,7 +347,11 @@ fn test_even_faster_iterate() {
     ]));
 
     // NBBBCNCCNBBNBNBBCHBHHBCHB
-    let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 3);
+    // 5 Ns, 5 Cs, 4 Hs, 11 Bs
+    let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 3);
+    let (min, max) = min_max_from_pairs(&pair_counts, start.clone());
+    assert_eq!(max - min, 11 - 4);
+    assert_eq!(start, "NB");
     assert_eq!(pair_counts, HashMap::from([
         ("NN".to_string(), 0),
         ("HC".to_string(), 0),
@@ -352,8 +370,8 @@ fn test_even_faster_iterate() {
         ("HB".to_string(), 3),
     ]));
 
-    let (pair_counts, start, end) = even_faster_expand_iter(&template, &rules_map, 10);
-    let (min, max) = min_max_from_pairs(&pair_counts, start, end);
+    let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 10);
+    let (min, max) = min_max_from_pairs(&pair_counts, start);
     assert_eq!(max - min, 1588);
 }
 
