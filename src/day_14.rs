@@ -10,12 +10,17 @@ pub(crate) fn run() {
     }
 
     let (min, max) = count_elems(&template);
-    println!("The max {} minus min {} is {}", max, min, max - min);
+    println!("The max {} minus min {} is {} after 10 iterations", max, min, max - min);
+
+    let rules_map = rules_as_map(&rules);
 
     for iteration in 10..40 {
-        expand_polymer(&mut template, &rules);
+        fast_expand(&mut template, &rules_map);
         println!("Iteration {} yields a polymer of size {}", iteration + 1, &template.len());
     }
+
+    let (min, max) = count_elems(&template);
+    println!("The max {} minus min {} is {} after 40 iterations", max, min, max - min);
 }
 
 #[derive(Clone)]
@@ -108,7 +113,23 @@ pub(crate) fn expand_polymer(template: &mut Vec<String>, rules: &Vec<InsertRule>
 }
 
 pub(crate) fn fast_expand(template: &mut Vec<String>, rules_map: &HashMap<String, String>) {
+    // Look behind: cursor starts with 1 and finds a look-behind match in the rules map
+    let mut cursor = 1;
+    let mut template_size = template.len();
 
+    while cursor < template_size {
+        // Look behind
+        let sequence_at_cursor = template[cursor - 1].clone() + &template[cursor].clone();
+
+        if let Some(to_insert) = rules_map.get((sequence_at_cursor.as_str())) {
+            template.insert(cursor, to_insert.clone());
+            // Skip over the just inserted element
+            cursor += 1;
+            template_size += 1;
+        }
+
+        cursor += 1;
+    }
 }
 
 pub(crate) fn find_matches(template: &Vec<String>, rule: &InsertRule) -> Vec<usize> {
@@ -165,6 +186,11 @@ fn test_manual_iterate() {
     let (mut template, rules) = parse_inputs(&inputs);
 
     expand_polymer(&mut template, &rules);
+    // Starts from       vec!["N", "N", "C", "B"]; cursor = 1
+    // To:               vec!["N", "C", "N", "C", "B"]; cursor is now 3
+    // To:               vec!["N", "C", "N", "B", "C", "B"]; cursor is now 5
+    // To:               vec!["N", "C", "N", "B", "C", "B"]; cursor is now 7
+    // To:               vec!["N", "C", "N", "B", "C", "H", "B"]; cursor is now 9, which is > size
     assert_eq!(template, vec!["N", "C", "N", "B", "C", "H", "B"]);
 
     expand_polymer(&mut template, &rules);
