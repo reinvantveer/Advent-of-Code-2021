@@ -121,7 +121,7 @@ pub(crate) fn fast_expand(template: &mut Vec<String>, rules_map: &HashMap<String
         // Look behind
         let sequence_at_cursor = template[cursor - 1].clone() + &template[cursor].clone();
 
-        if let Some(to_insert) = rules_map.get((sequence_at_cursor.as_str())) {
+        if let Some(to_insert) = rules_map.get(sequence_at_cursor.as_str()) {
             template.insert(cursor, to_insert.clone());
             // Skip over the just inserted element
             cursor += 1;
@@ -130,6 +130,50 @@ pub(crate) fn fast_expand(template: &mut Vec<String>, rules_map: &HashMap<String
 
         cursor += 1;
     }
+}
+
+pub(crate) fn even_faster_expand(
+    template: &mut Vec<String>,
+    rules_map: &HashMap<String, String>,
+    iterations: usize,
+) -> HashMap<String, usize> {
+    let mut sequence_map: HashMap<String, usize> = HashMap::new();
+
+    // Start and end sequences
+    let mut start_sequence = template[0].clone() + &template[1];
+    let last_idx = template.len() - 1;
+    let mut end_sequence = template[last_idx - 1].clone() + &template[last_idx];
+
+    for elem_idx in 0..template.len() - 1 {
+        let seq_at_idx = template[elem_idx].clone() + &template[elem_idx + 1];
+        let entry = sequence_map.entry(seq_at_idx).or_insert(0);
+        *entry += 1;
+    }
+
+    for _ in 0..iterations {
+        for (key, to_insert) in rules_map {
+            if let Some(&mut mut to_mutate) = sequence_map.get_mut(key) {
+                to_mutate -= 1;
+
+                let first_char = key.chars().collect::<Vec<_>>()[0].to_string();
+                let second_char = key.chars().collect::<Vec<_>>()[1].to_string();
+                let new_seq_to_left = first_char + to_insert;
+                let new_seq_to_right = to_insert.clone() + &*second_char;
+
+                let entry_to_left = sequence_map.entry(new_seq_to_left).or_insert(0);
+                *entry_to_left += 1;
+
+                let entry_to_right = sequence_map.entry(new_seq_to_right).or_insert(0);
+                *entry_to_right += 1;
+            }
+        }
+    }
+
+    sequence_map
+}
+
+pub(crate) fn min_max_from_seqs(sequence_map: &HashMap<String, usize>) -> (usize, usize) {
+
 }
 
 pub(crate) fn find_matches(template: &Vec<String>, rule: &InsertRule) -> Vec<usize> {
@@ -177,7 +221,6 @@ fn test_matching_seqs() {
     let n_n = rules[7].clone();
     let positions = find_matches(&template, &n_n);
     assert_eq!(positions, vec![1])
-
 }
 
 #[test]
@@ -216,6 +259,17 @@ fn test_manual_fast_iterate() {
     fast_expand(&mut template, &rules_map);
     assert_eq!(template,
                vec!["N", "B", "B", "B", "C", "N", "C", "C", "N", "B", "B", "N", "B", "N", "B", "B", "C", "H", "B", "H", "H", "B", "C", "H", "B"]);
+}
+
+#[test]
+fn test_even_faster_iterate() {
+    let inputs = read_lines("data/day_14_sample.txt");
+    let (mut template, rules) = parse_inputs(&inputs);
+    let rules_map = rules_as_map(&rules);
+
+    let sequence_map = even_faster_expand(&mut template, &rules_map, 10);
+
+    assert_eq!(max - min, 1588);
 }
 
 #[test]
