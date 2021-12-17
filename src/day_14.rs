@@ -159,24 +159,26 @@ pub(crate) fn even_faster_expand_iter(
 }
 
 pub fn even_faster_expand(pair_counts: &mut HashMap<String, usize>, rules_map: &HashMap<String, String>) {
-    let before_mutations = pair_counts.clone();
+    let unmodified_counts = pair_counts.clone();
 
-    for (pair, unmodified_count) in before_mutations {
-        if rules_map.get(&*pair) == None { continue; }
+    for (unmodified_pair, unmodified_count) in unmodified_counts {
+        if rules_map.get(&unmodified_pair) == None { continue; }
         if unmodified_count == 0 { continue; }
 
-        let elem_to_insert = rules_map.get(&*pair).unwrap();
+        let elem_to_insert = rules_map.get(&unmodified_pair).unwrap();
 
         // First: decrease the count for the pair that gets split to insert a new element
-        let pair_to_split_count = pair_counts.get_mut(&*pair).unwrap();
+        let pair_to_split_count = pair_counts.get_mut(&unmodified_pair).unwrap();
 
         *pair_to_split_count = 0;
 
         // Then: increase the count on what pairs are added to left and right of the insert
-        let first_char = pair.chars().collect::<Vec<_>>()[0].to_string();
-        let second_char = pair.chars().collect::<Vec<_>>()[1].to_string();
-        let new_pair_to_left = first_char + elem_to_insert;
-        let new_pair_to_right = elem_to_insert.clone() + &*second_char;
+        let pair_chars = unmodified_pair.chars().collect::<Vec<_>>();
+        let first_elem = pair_chars[0].to_string();
+        let second_elem = pair_chars[1].to_string();
+
+        let new_pair_to_left = first_elem + &elem_to_insert;
+        let new_pair_to_right = elem_to_insert.to_string() + &second_elem;
 
         let entry_to_left = pair_counts.entry(new_pair_to_left).or_insert(0);
         *entry_to_left += unmodified_count;
