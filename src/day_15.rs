@@ -99,11 +99,24 @@ pub(crate) fn add_edge_to_left(grid: &Vec<Vec<usize>>, graph: &mut Graph<(usize,
 }
 
 pub(crate) fn expand_grid(grid: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
-    for expand_hor in 1..6 {
-        for expand_ver in 1..6 {
+    // Initialize as zeroes
+    let mut expanded = vec![vec![0; grid[0].len() * 5]; grid.len() * 5];
 
+    for expand_hor in 0..5 {
+        for expand_ver in 0..5 {
+            fill_increase(&mut expanded, &grid, expand_hor, expand_ver);
         }
     }
+
+    expanded
+}
+
+pub(crate) fn fill_increase(expanded: &mut Vec<Vec<usize>>, base: &Vec<Vec<usize>>, hor: usize, ver: usize) {
+    let col_offset = base[0].len() * ver;
+    let row_offset = base.len() * hor;
+
+    let increase = hor + ver;
+
 }
 
 #[cfg(test)]
@@ -170,4 +183,9 @@ fn test_expand_grid() {
     let grid = parse_grid(&inputs);
     let expanded = expand_grid(&grid);
 
+    let grid_rows = grid.len();
+    let gird_cols = grid[0].len();
+
+    assert_eq!(expanded.len(), grid_rows * 5);
+    assert_eq!(expanded[0].len(), gird_cols * 5);
 }
