@@ -1,4 +1,5 @@
 use petgraph::{Graph, Undirected};
+use petgraph::algo::{astar, dijkstra};
 use petgraph::graph::NodeIndex;
 use advent_of_code_2021::{find_node, read_lines};
 
@@ -122,4 +123,26 @@ fn test_parse_graph() {
     let from = find_node(&graph, &(0, 0)).unwrap();
     let to = find_node(&graph, &(1, 0)).unwrap();
     assert_eq!(graph.contains_edge(from, to), true);
+}
+
+#[test]
+fn test_cheapest_path() {
+    let inputs = read_lines("data/day_15_sample.txt");
+    let grid = parse_grid(&inputs);
+    let graph = parse_graph(&grid);
+
+    let start_node = find_node(&graph, &(0, 0)).unwrap();
+    let finish_node = find_node(&graph, &(9, 9)).unwrap();
+    let cheapest = astar(
+        &graph, start_node,
+        |n| n == finish_node,
+        |e| *e.weight(),
+        |_| 0
+    ).unwrap();
+    println!("cheapest: {:?}", cheapest);
+    println!("Route:");
+    for node in cheapest.1 {
+        print!("{:?} ", graph[node])
+    }
+    assert_eq!(cheapest.0, 40);
 }
