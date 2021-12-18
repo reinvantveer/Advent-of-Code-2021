@@ -12,14 +12,10 @@ pub(crate) fn run() {
     let (min, max) = count_elems(&template);
     println!("The max {} minus min {} is {} after 10 iterations", max, min, max - min);
 
+    let (template, rules) = parse_inputs(&inputs);
     let rules_map = rules_as_map(&rules);
-
-    for iteration in 10..40 {
-        fast_expand(&mut template, &rules_map);
-        println!("Iteration {} yields a polymer of size {}", iteration + 1, &template.len());
-    }
-
-    let (min, max) = count_elems(&template);
+    let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 40);
+    let (min, max) = min_max_from_pairs(&pair_counts, start);
     println!("The max {} minus min {} is {} after 40 iterations", max, min, max - min);
 }
 
@@ -112,6 +108,7 @@ pub(crate) fn expand_polymer(template: &mut Vec<String>, rules: &Vec<InsertRule>
     }
 }
 
+#[test]
 pub(crate) fn fast_expand(template: &mut Vec<String>, rules_map: &HashMap<String, String>) {
     // Look behind: cursor starts with 1 and finds a look-behind match in the rules map
     let mut cursor = 1;
