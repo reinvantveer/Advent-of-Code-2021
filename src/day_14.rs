@@ -202,16 +202,15 @@ pub(crate) fn min_max_from_pairs(pair_counts: &HashMap<String, usize>, start_pai
     for (pair, count) in pair_counts {
         if *count == 0 { continue; }
 
-        // Since all pairs MUST overlap, we only need to sum the last elements
-        let first_elem = pair.chars().collect::<Vec<_>>()[0];
-        let last_elem = pair.chars().collect::<Vec<_>>()[1];
+        let first_elem = pair.chars().collect::<Vec<_>>()[0].to_string();
+        let last_elem = pair.chars().collect::<Vec<_>>()[1].to_string();
 
-        let elem_count = elem_counts.entry(last_elem.to_string()).or_insert(0);
+        let elem_count = elem_counts.entry(last_elem.clone()).or_insert(0);
         *elem_count += *count;
 
         // Except for the start pair: it has a non-overlapping first element
         if pair == &start_pair {
-            let elem_count = elem_counts.entry(first_elem.to_string()).or_insert(0);
+            let elem_count = elem_counts.entry(first_elem).or_insert(0);
             *elem_count += *count;
         }
     }
@@ -222,7 +221,6 @@ pub(crate) fn min_max_from_pairs(pair_counts: &HashMap<String, usize>, start_pai
     let min = *counts.first().unwrap().clone();
     let max = *counts.last().unwrap().clone();
 
-    // There's a off-by-one bug I don't understand, but at least it's consistent
     (min, max)
 }
 
@@ -319,6 +317,8 @@ fn test_even_faster_iterate() {
 
     // NCNBCHB
     let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 1);
+    let (min, max) = min_max_from_pairs(&pair_counts, start.clone());
+    assert_eq!(max - min, 2 - 1);
     assert_eq!(start, "NC");
     assert_eq!(pair_counts, HashMap::from([
         ("NN".to_string(), 0),
@@ -332,9 +332,10 @@ fn test_even_faster_iterate() {
     ]));
 
     // NBCCNBBBCBHCB
+    // 1 H, 2 N's, 4 C's, 6 B's
     let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 2);
     let (min, max) = min_max_from_pairs(&pair_counts, start.clone());
-    assert_eq!(max - min, 2 - 1);
+    assert_eq!(max - min, 6 - 1);
     assert_eq!(start, "NB");
     assert_eq!(pair_counts, HashMap::from([
         ("NN".to_string(), 0),
