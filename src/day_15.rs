@@ -98,6 +98,14 @@ pub(crate) fn add_edge_to_left(grid: &Vec<Vec<usize>>, graph: &mut Graph<(usize,
     graph.add_edge(node_to_left, from_node_idx, risk_from_left);
 }
 
+pub(crate) fn expand_grid(grid: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    for expand_hor in 1..6 {
+        for expand_ver in 1..6 {
+
+        }
+    }
+}
+
 #[cfg(test)]
 #[test]
 fn test_parse_grid() {
@@ -154,4 +162,12 @@ fn test_cheapest_path() {
         print!("{:?} ", graph[node], )
     }
     assert_eq!(cheapest.0, 40);
+}
+
+#[test]
+fn test_expand_grid() {
+    let inputs = read_lines("data/day_15_sample.txt");
+    let grid = parse_grid(&inputs);
+    let expanded = expand_grid(&grid);
+
 }
