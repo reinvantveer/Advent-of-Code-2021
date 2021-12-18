@@ -103,7 +103,7 @@ fn add_edge_to_above(
         node_above_idx = graph.add_node((row_above_idx, col_idx))
     }
 
-    graph.add_edge(from_node_idx, node_above_idx, risk_to_above);
+    // graph.add_edge(from_node_idx, node_above_idx, risk_to_above);
     graph.add_edge(node_above_idx, from_node_idx, risk_from_above);
 }
 
@@ -121,7 +121,7 @@ pub(crate) fn add_edge_to_left(grid: &Vec<Vec<usize>>, graph: &mut Graph<(usize,
         node_to_left = graph.add_node((row_idx, col_to_left_idx))
     }
 
-    graph.add_edge(from_node_idx, node_to_left, risk_to_left);
+    // graph.add_edge(from_node_idx, node_to_left, risk_to_left);
     graph.add_edge(node_to_left, from_node_idx, risk_from_left);
 }
 
@@ -173,13 +173,13 @@ fn test_parse_graph() {
     let to = find_node(&graph, &(0, 0)).unwrap();
     assert_eq!(graph.contains_edge(from, to), false);
 
-    let from = find_node(&graph, &(0, 1)).unwrap();
-    let to = find_node(&graph, &(0, 0)).unwrap();
-    assert_eq!(graph.contains_edge(from, to), true);
+    // let from = find_node(&graph, &(0, 1)).unwrap();
+    // let to = find_node(&graph, &(0, 0)).unwrap();
+    // assert_eq!(graph.contains_edge(from, to), true);
 
-    let from = find_node(&graph, &(1, 0)).unwrap();
-    let to = find_node(&graph, &(0, 0)).unwrap();
-    assert_eq!(graph.contains_edge(from, to), true);
+    // let from = find_node(&graph, &(1, 0)).unwrap();
+    // let to = find_node(&graph, &(0, 0)).unwrap();
+    // assert_eq!(graph.contains_edge(from, to), true);
 
     let from = find_node(&graph, &(0, 0)).unwrap();
     let to = find_node(&graph, &(0, 1)).unwrap();
