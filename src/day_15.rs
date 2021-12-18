@@ -4,22 +4,45 @@ use petgraph::graph::NodeIndex;
 use advent_of_code_2021::{find_node, read_lines};
 
 pub(crate) fn run() {
-    let inputs = read_lines("data/day_15_input.txt");
-    let grid = parse_grid(&inputs);
-    let graph = parse_graph(&grid);
+    {
+        let inputs = read_lines("data/day_15_input.txt");
+        let grid = parse_grid(&inputs);
+        let graph = parse_graph(&grid);
 
-    let start_node = find_node(&graph, &(0, 0)).unwrap();
-    let last_row_idx = grid.len() - 1;
-    let last_col_idx = grid[0].len() - 1;
-    let finish_node = find_node(&graph, &(last_row_idx, last_col_idx)).unwrap();
-    let cheapest = astar(
-        &graph, start_node,
-        |n| n == finish_node,
-        |e| *e.weight(),
-        |_| 0
-    ).unwrap();
+        let start_node = find_node(&graph, &(0, 0)).unwrap();
+        let last_row_idx = grid.len() - 1;
+        let last_col_idx = grid[0].len() - 1;
+        let finish_node = find_node(&graph, &(last_row_idx, last_col_idx)).unwrap();
+        let cheapest = astar(
+            &graph, start_node,
+            |n| n == finish_node,
+            |e| *e.weight(),
+            |_| 0,
+        ).unwrap();
 
-    println!("The cheapest route costs {}", cheapest.0);
+        println!("The cheapest route costs {}", cheapest.0);
+    }
+
+    {
+        let inputs = read_lines("data/day_15_input.txt");
+        let grid = parse_grid(&inputs);
+        let expanded = expand_grid(&grid);
+        let full_map_graph = parse_graph(&expanded);
+
+        let start_node = find_node(&full_map_graph, &(0, 0)).unwrap();
+        let last_row_idx = expanded.len() - 1;
+        let last_col_idx = expanded[0].len() - 1;
+        let finish_node = find_node(&full_map_graph, &(last_row_idx, last_col_idx)).unwrap();
+
+        let cheapest = astar(
+            &full_map_graph, start_node,
+            |n| n == finish_node,
+            |e| *e.weight(),
+            |_| 0,
+        ).unwrap();
+
+        println!("The cheapest route for the entire map costs {}", cheapest.0);
+    }
 }
 
 pub(crate) fn parse_grid(inputs: &Vec<String>) -> Vec<Vec<usize>> {
@@ -114,8 +137,16 @@ pub(crate) fn expand_grid(grid: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
 pub(crate) fn fill_increase(expanded: &mut Vec<Vec<usize>>, base: &Vec<Vec<usize>>, hor: usize, ver: usize) {
     let col_offset = base[0].len() * ver;
     let row_offset = base.len() * hor;
-
     let increase = hor + ver;
+
+    for (row_idx, row) in base.iter().enumerate() {
+        for (col_idx, entry) in row.iter().enumerate() {
+            let mut increased = *entry + increase;
+            if increased > 9 { increased -= 9; }
+
+            expanded[row_idx + row_offset][col_idx + col_offset] = increased;
+        }
+    }
 
 }
 
@@ -182,10 +213,30 @@ fn test_expand_grid() {
     let inputs = read_lines("data/day_15_sample.txt");
     let grid = parse_grid(&inputs);
     let expanded = expand_grid(&grid);
+    let graph = parse_graph(&expanded);
 
     let grid_rows = grid.len();
-    let gird_cols = grid[0].len();
+    let grid_cols = grid[0].len();
 
     assert_eq!(expanded.len(), grid_rows * 5);
-    assert_eq!(expanded[0].len(), gird_cols * 5);
+    assert_eq!(expanded[0].len(), grid_cols * 5);
+
+    let expected_inputs = read_lines("data/day_15_expanded_sample.txt");
+    let expected_grid = parse_grid(&expected_inputs);
+    // for row_idx in 0..expanded.len() {
+    //     println!("e{} {:?}", row_idx, expected_grid[row_idx]);
+    //     println!("a{} {:?}", row_idx, expanded[row_idx]);
+    //     assert_eq!(expected_grid[row_idx], expanded[row_idx]);
+    // }
+    assert_eq!(expanded, expected_grid);
+
+    let start_node = find_node(&graph, &(0, 0)).unwrap();
+    let finish_node = find_node(&graph, &(49, 49)).unwrap();
+    let cheapest = astar(
+        &graph, start_node,
+        |n| n == finish_node,
+        |e| *e.weight(),
+        |_| 0
+    ).unwrap();
+    assert_eq!(cheapest.0, 315);
 }
