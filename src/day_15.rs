@@ -4,7 +4,22 @@ use petgraph::graph::NodeIndex;
 use advent_of_code_2021::{find_node, read_lines};
 
 pub(crate) fn run() {
+    let inputs = read_lines("data/day_15_input.txt");
+    let grid = parse_grid(&inputs);
+    let graph = parse_graph(&grid);
 
+    let start_node = find_node(&graph, &(0, 0)).unwrap();
+    let last_row_idx = grid.len() - 1;
+    let last_col_idx = grid[0].len() - 1;
+    let finish_node = find_node(&graph, &(last_row_idx, last_col_idx)).unwrap();
+    let cheapest = astar(
+        &graph, start_node,
+        |n| n == finish_node,
+        |e| *e.weight(),
+        |_| 0
+    ).unwrap();
+
+    println!("The cheapest route costs {}", cheapest.0);
 }
 
 pub(crate) fn parse_grid(inputs: &Vec<String>) -> Vec<Vec<usize>> {
