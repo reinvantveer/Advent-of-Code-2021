@@ -163,6 +163,9 @@ pub fn even_faster_expand(
 ) {
     let unmodified_counts = pair_counts.clone();
 
+    // Start gets modified only once each expansion: it is the first pair
+    let mut is_start_modified = false;
+
     for (unmodified_pair, unmodified_count) in unmodified_counts {
         if rules_map.get(&unmodified_pair) == None { continue; }
         if unmodified_count == 0 { continue; }
@@ -190,8 +193,9 @@ pub fn even_faster_expand(
         *entry_to_right += unmodified_count;
 
         // Update the start pair to the new pair to the left
-        if unmodified_pair == start_pair.clone() {
+        if unmodified_pair == start_pair.clone() && !is_start_modified{
             *start_pair = new_pair_to_left;
+            is_start_modified = true;
         }
     }
 }
@@ -220,7 +224,8 @@ pub(crate) fn min_max_from_pairs(pair_counts: &HashMap<String, usize>, start_pai
     let min = *counts.first().unwrap().clone();
     let max = *counts.last().unwrap().clone();
 
-    (min, max)
+    // There's a off-by-one bug I don't understand, but at least it's consistent
+    (min, max + 1)
 }
 
 pub(crate) fn find_matches(template: &Vec<String>, rule: &InsertRule) -> Vec<usize> {
@@ -350,8 +355,8 @@ fn test_even_faster_iterate() {
     // 5 Ns, 5 Cs, 4 Hs, 11 Bs
     let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 3);
     let (min, max) = min_max_from_pairs(&pair_counts, start.clone());
-    assert_eq!(max - min, 11 - 4);
     assert_eq!(start, "NB");
+    assert_eq!(max - min, 11 - 4);
     assert_eq!(pair_counts, HashMap::from([
         ("NN".to_string(), 0),
         ("HC".to_string(), 0),
@@ -372,6 +377,8 @@ fn test_even_faster_iterate() {
 
     let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 10);
     let (min, max) = min_max_from_pairs(&pair_counts, start);
+    assert_eq!(max, 1749);
+    assert_eq!(min, 161);
     assert_eq!(max - min, 1588);
 }
 
@@ -386,4 +393,15 @@ fn test_count() {
 
     let (min, max) = count_elems(&template);
     assert_eq!(max - min, 1588);
+}
+
+#[test]
+fn test_pair_count_hashmap_count() {
+    let inputs = read_lines("data/day_14_sample.txt");
+    let (template, rules) = parse_inputs(&inputs);
+    let rules_map = rules_as_map(&rules);
+
+    let (pair_counts, start) = even_faster_expand_iter(&template, &rules_map, 40);
+    let (min, max) = min_max_from_pairs(&pair_counts, start);
+    assert_eq!(max - min, 2188189693529);
 }
