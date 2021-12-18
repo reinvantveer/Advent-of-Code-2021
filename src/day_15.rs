@@ -1,5 +1,5 @@
-use petgraph::{Graph, Undirected};
-use petgraph::algo::{astar, dijkstra};
+use petgraph::{Directed, Graph};
+use petgraph::algo::astar;
 use petgraph::graph::NodeIndex;
 use advent_of_code_2021::{find_node, read_lines};
 
@@ -17,26 +17,11 @@ pub(crate) fn parse_grid(inputs: &Vec<String>) -> Vec<Vec<usize>> {
         .collect()
 }
 
-pub(crate) fn parse_graph(grid: &Vec<Vec<usize>>) -> Graph<(usize, usize), usize, Undirected>{
-    let mut graph = Graph::new_undirected();
+pub(crate) fn parse_graph(grid: &Vec<Vec<usize>>) -> Graph<(usize, usize), usize, Directed>{
+    let mut graph = Graph::new();
 
-    // Add start node
-    graph.add_node((0, 0));
-
-    // Add first-rows edges: it's not covered by edges to above and left in code below
-    for col_idx in 1..grid[1].len() {
-        let row_1_node = graph.add_node((1, col_idx));
-        add_edge_to_above(&grid, &mut graph, row_1_node)
-    }
-
-    // Add first-column edges: it's not covered by edges to above and left in code below
-    for row_idx in 1..grid.len() {
-        let col_1_node = graph.add_node((row_idx, 1));
-        add_edge_to_left(&grid, &mut graph, col_1_node)
-    }
-
-    for row_idx in 1..grid.len() {
-        for col_idx in 1..grid[1].len() {
+    for row_idx in 0..grid.len() {
+        for col_idx in 0..grid[1].len() {
             let from_node_idx;
 
             if let Some(n) = find_node(&graph, &(row_idx, col_idx)) {
@@ -45,8 +30,13 @@ pub(crate) fn parse_graph(grid: &Vec<Vec<usize>>) -> Graph<(usize, usize), usize
                 from_node_idx = graph.add_node((row_idx, col_idx))
             }
 
-            add_edge_to_above(grid, &mut graph, from_node_idx);
-            add_edge_to_left(grid, &mut graph, from_node_idx);
+            if row_idx > 0 {
+                add_edge_to_above(grid, &mut graph, from_node_idx);
+            }
+
+            if col_idx > 0 {
+                add_edge_to_left(grid, &mut graph, from_node_idx);
+            }
         }
     }
 
@@ -56,12 +46,13 @@ pub(crate) fn parse_graph(grid: &Vec<Vec<usize>>) -> Graph<(usize, usize), usize
 // Add edge to entry above
 fn add_edge_to_above(
     grid: &Vec<Vec<usize>>,
-    graph: &mut Graph<(usize, usize), usize, Undirected>,
+    graph: &mut Graph<(usize, usize), usize, Directed>,
     from_node_idx: NodeIndex
 ) {
     let (row_idx, col_idx) = graph[from_node_idx];
     let row_above_idx = row_idx - 1;
-    let risk = grid[row_above_idx][col_idx];
+    let risk_to_above = grid[row_above_idx][col_idx];
+    let risk_from_above = grid[row_idx][col_idx];
     let node_above_idx;
 
     if let Some(n) = find_node(&graph, &(row_above_idx, col_idx)) {
@@ -70,16 +61,16 @@ fn add_edge_to_above(
         node_above_idx = graph.add_node((row_above_idx, col_idx))
     }
 
-    graph.add_edge(from_node_idx, node_above_idx, risk);
-    graph.add_edge(node_above_idx, from_node_idx, risk);
+    graph.add_edge(from_node_idx, node_above_idx, risk_to_above);
+    graph.add_edge(node_above_idx, from_node_idx, risk_from_above);
 }
 
 // Add edge to entry to the left
-pub(crate) fn add_edge_to_left(grid: &Vec<Vec<usize>>, graph: &mut Graph<(usize, usize), usize, Undirected>, from_node_idx: NodeIndex) {
+pub(crate) fn add_edge_to_left(grid: &Vec<Vec<usize>>, graph: &mut Graph<(usize, usize), usize, Directed>, from_node_idx: NodeIndex) {
     let (row_idx, col_idx) = graph[from_node_idx];
-
     let col_to_left_idx = col_idx - 1;
-    let risk = grid[row_idx][col_to_left_idx];
+    let risk_to_left = grid[row_idx][col_to_left_idx];
+    let risk_from_left = grid[row_idx][col_idx];
     let node_to_left;
 
     if let Some(n) = find_node(&graph, &(row_idx, col_to_left_idx)) {
@@ -88,8 +79,8 @@ pub(crate) fn add_edge_to_left(grid: &Vec<Vec<usize>>, graph: &mut Graph<(usize,
         node_to_left = graph.add_node((row_idx, col_to_left_idx))
     }
 
-    graph.add_edge(from_node_idx, node_to_left, risk);
-    // graph.add_edge(node_to_left, from_node_idx, risk);
+    graph.add_edge(from_node_idx, node_to_left, risk_to_left);
+    graph.add_edge(node_to_left, from_node_idx, risk_from_left);
 }
 
 #[cfg(test)]
@@ -145,7 +136,7 @@ fn test_cheapest_path() {
     println!("cheapest: {:?}", cheapest);
     println!("Route:");
     for node in cheapest.1 {
-        print!("{:?} ", graph[node])
+        print!("{:?} ", graph[node], )
     }
     assert_eq!(cheapest.0, 40);
 }
