@@ -21,16 +21,18 @@ pub(crate) fn parse_graph(grid: &Vec<Vec<usize>>) -> Graph<(usize, usize), usize
     let mut graph = Graph::new_undirected();
 
     // Add start node
-    let from_node = graph.add_node((0, 0));
+    graph.add_node((0, 0));
 
     // Add first-rows edges: it's not covered by edges to above and left in code below
     for col_idx in 1..grid[1].len() {
-        add_edge_to_left(&grid, &mut graph, 0, col_idx, from_node)
+        let row_1_node = graph.add_node((1, col_idx));
+        add_edge_to_above(&grid, &mut graph, row_1_node)
     }
 
     // Add first-column edges: it's not covered by edges to above and left in code below
     for row_idx in 1..grid.len() {
-        add_edge_to_above(&grid, &mut graph, row_idx, 0, from_node)
+        let col_1_node = graph.add_node((row_idx, 1));
+        add_edge_to_left(&grid, &mut graph, col_1_node)
     }
 
     for row_idx in 1..grid.len() {
@@ -43,22 +45,21 @@ pub(crate) fn parse_graph(grid: &Vec<Vec<usize>>) -> Graph<(usize, usize), usize
                 from_node_idx = graph.add_node((row_idx, col_idx))
             }
 
-            add_edge_to_above(grid, &mut graph, row_idx, col_idx, from_node_idx);
-            add_edge_to_left(grid, &mut graph, row_idx, col_idx, from_node_idx);
+            add_edge_to_above(grid, &mut graph, from_node_idx);
+            add_edge_to_left(grid, &mut graph, from_node_idx);
         }
     }
 
     graph
 }
 
+// Add edge to entry above
 fn add_edge_to_above(
     grid: &Vec<Vec<usize>>,
     graph: &mut Graph<(usize, usize), usize, Undirected>,
-    row_idx: usize,
-    col_idx: usize,
     from_node_idx: NodeIndex
 ) {
-// Add edge to entry above
+    let (row_idx, col_idx) = graph[from_node_idx];
     let row_above_idx = row_idx - 1;
     let risk = grid[row_above_idx][col_idx];
     let node_above_idx;
@@ -73,8 +74,10 @@ fn add_edge_to_above(
     graph.add_edge(node_above_idx, from_node_idx, risk);
 }
 
-pub(crate) fn add_edge_to_left(grid: &Vec<Vec<usize>>, graph: &mut Graph<(usize, usize), usize, Undirected>, row_idx: usize, col_idx: usize, from_node_idx: NodeIndex) {
 // Add edge to entry to the left
+pub(crate) fn add_edge_to_left(grid: &Vec<Vec<usize>>, graph: &mut Graph<(usize, usize), usize, Undirected>, from_node_idx: NodeIndex) {
+    let (row_idx, col_idx) = graph[from_node_idx];
+
     let col_to_left_idx = col_idx - 1;
     let risk = grid[row_idx][col_to_left_idx];
     let node_to_left;
