@@ -1,5 +1,5 @@
 use petgraph::{Directed, Graph};
-use petgraph::algo::astar;
+use petgraph::algo::{all_simple_paths, astar};
 use petgraph::graph::NodeIndex;
 use advent_of_code_2021::{find_node, read_lines};
 
@@ -12,6 +12,8 @@ pub(crate) fn run() {
         let start_node = find_node(&graph, &(0, 0)).unwrap();
         let last_row_idx = grid.len() - 1;
         let last_col_idx = grid[0].len() - 1;
+        println!("The map is {} rows by {} cols", last_row_idx + 1, last_col_idx + 1);
+
         let finish_node = find_node(&graph, &(last_row_idx, last_col_idx)).unwrap();
         let cheapest = astar(
             &graph, start_node,
@@ -32,6 +34,8 @@ pub(crate) fn run() {
         let start_node = find_node(&full_map_graph, &(0, 0)).unwrap();
         let last_row_idx = expanded.len() - 1;
         let last_col_idx = expanded[0].len() - 1;
+        println!("The full map is {} rows by {} cols", last_row_idx + 1, last_col_idx + 1);
+
         let finish_node = find_node(&full_map_graph, &(last_row_idx, last_col_idx)).unwrap();
 
         let cheapest = astar(
