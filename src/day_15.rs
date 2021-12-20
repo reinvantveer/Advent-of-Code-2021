@@ -93,7 +93,7 @@ fn add_edge_to_above(
 ) {
     let (row_idx, col_idx) = graph[from_node_idx];
     let row_above_idx = row_idx - 1;
-    // let risk_to_above = grid[row_above_idx][col_idx];
+    let risk_to_above = grid[row_above_idx][col_idx];
     let risk_from_above = grid[row_idx][col_idx];
     let node_above_idx;
 
@@ -111,7 +111,7 @@ fn add_edge_to_above(
 pub(crate) fn add_edge_to_left(grid: &Vec<Vec<usize>>, graph: &mut Graph<(usize, usize), usize, Directed>, from_node_idx: NodeIndex) {
     let (row_idx, col_idx) = graph[from_node_idx];
     let col_to_left_idx = col_idx - 1;
-    // let risk_to_left = grid[row_idx][col_to_left_idx];
+    let risk_to_left = grid[row_idx][col_to_left_idx];
     let risk_from_left = grid[row_idx][col_idx];
     let node_to_left;
 
